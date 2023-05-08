@@ -4,12 +4,12 @@ from src.domain.model import Item
 app = FastAPI()
 
 
-@app.get("/items", response_model=Item)
+@app.get("/items", response_model=list[Item])
 def get_items():
     pass
 
 
-@app.get("/items/{item_id}", response_model=list[Item])
+@app.get("/items/{item_id}", response_model=Item)
 def get_item(item_id: int):
     pass
 
@@ -25,5 +25,5 @@ def update_item(item_id: int, item: Item):
 
 
 @app.delete("/items/{item_id}")
-def delete_itme(item_id: int):
+def delete_item(item_id: int):
     pass
