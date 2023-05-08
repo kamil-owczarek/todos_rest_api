@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 
-class TodoItem(BaseModel):
+
+class Item(BaseModel):
     id: int
     title: str
-    description: str 
+    description: str
     completed: bool = False
