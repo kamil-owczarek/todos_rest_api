@@ -1,6 +1,9 @@
+import logging
 from abc import ABC, abstractmethod
+
+from sqlalchemy import Row, text
 from src.domain.model import Item
-from sqlalchemy import create_engine, text
+from src.utils.exceptions import IdNotFound
 
 
 class AbstractRepository(ABC):
@@ -26,63 +29,64 @@ class AbstractRepository(ABC):
 
 
 class PostgresRepository(AbstractRepository):
-    def __init__(self, username, password, host, database_name, table_name, port=5432):
-        self.username = username
-        self.password = password
-        self.host = host
-        self.port = port
-        self.database_name = database_name
-        self.table_name = table_name
-        self.__engine = self.__create_enginge()
-
-    def __create_enginge(self):
-        connection_string = "postgresql://{}:{}@{}:{}/{}".format(
-            self.username, self.password, self.host, self.port, self.database_name
-        )
-        return create_engine(connection_string)
+    def __init__(self, client_session):
+        self.session = client_session
+        self.table_name = "Items"
 
     def get_item(self, item_id):
-        sql_statement = text(f"SELECT * FROM {self.table_name} WHERE Id = {item_id}")
-        with self.__engine.connect() as conn:
-            result = conn.execute(sql_statement).fetchone()
-        return Item(**result._asdict())
+        try:
+            sql_statement = text(
+                f"SELECT * FROM {self.table_name} WHERE Id = {item_id}"
+            )
+            result = self.session.execute(sql_statement).fetchone()
+            if not isinstance(result, Row):
+                raise IdNotFound
+            return Item(**result._asdict())
+        except Exception as err:
+            logging.error(
+                f"Caught error during getting Item(Id {item_id}): {type(err)}"
+            )
+            raise err
 
     def get_items(self):
-        sql_statement = text(f"SELECT * FROM {self.table_name}")
-        with self.__engine.connect() as conn:
-            result = conn.execute(sql_statement).fetchall()
-        return [Item(**item._asdict()) for item in result]
+        try:
+            sql_statement = text(f"SELECT * FROM {self.table_name} WHERE Id")
+            result = self.session.execute(sql_statement).fetchall()
+            return [Item(**item._asdict()) for item in result]
+        except Exception as err:
+            logging.error(f"Caught error during getting Items: {type(err)}")
+            raise err
 
     def insert_item(self, item: Item):
-        sql_statement = text(
-            f"INSERT INTO {self.table_name} (title, description, completed) VALUES(:title, :description, :completed)"
-        )
-        with self.__engine.connect() as conn:
-            try:
-                conn.execute(sql_statement, item.dict())
-                conn.commit()
-                return True
-            except Exception as err:
-                raise err
+        try:
+            sql_statement = text(
+                f"INSERT INTO {self.table_name} (title, description, completed) VALUES(:title, :description, :completed)"
+            )
+            self.session.execute(sql_statement, item.dict())
+            self.session.commit()
+            return True
+        except Exception as err:
+            logging.error(f"Caught error during Item upload: {err}")
+            raise err
 
     def update_item(self, item_id, item: Item):
-        sql_statement = text(
-            f"UPDATE {self.table_name} SET title=:title, description=:description, completed=:completed WHERE Id = {item_id}"
-        )
-        with self.__engine.connect() as conn:
-            try:
-                conn.execute(sql_statement, item.dict())
-                conn.commit()
-                return True
-            except Exception as err:
-                raise err
+        try:
+            sql_statement = text(
+                f"UPDATE {self.table_name} SET title=:title, description=:description, completed=:completed WHERE Id = {item_id}"
+            )
+            self.session.execute(sql_statement, item.dict())
+            self.session.commit()
+            return True
+        except Exception as err:
+            logging.error(f"Caught error during Item(Id: {item_id}) update: {err}")
+            raise err
 
     def delete_item(self, item_id: int):
-        sql_statement = text(f"DELETE FROM {self.table_name} WHERE Id = {item_id}")
-        with self.__engine.connect() as conn:
-            try:
-                conn.execute(sql_statement)
-                conn.commit()
-                return True
-            except Exception as err:
-                raise err
+        try:
+            sql_statement = text(f"DELETE FROM {self.table_name} WHERE Id = {item_id}")
+            self.session.execute(sql_statement)
+            self.session.commit()
+            return True
+        except Exception as err:
+            logging.error(f"Caught error during Item(Id: {item_id}) deletion: {err}")
+            raise err

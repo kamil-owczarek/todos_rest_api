@@ -1,28 +1,36 @@
-from abc import ABC, abstractmethod
-from src.domain.model import Item
-
-from src.repository.repository import AbstractRepository
+from abc import ABC
+from src.service.connector import PostgresConnector
+from src.repository.repository import AbstractRepository, PostgresRepository
+import logging
 
 
 class AbstractUnitOfWork(ABC):
     repository: AbstractRepository
 
-    @abstractmethod
-    def get_items(self):
-        raise NotImplementedError
+    def __enter__(self):
+        return self
 
-    @abstractmethod
-    def get_item(self, item_id: int):
-        raise NotImplementedError
+    def __exit__(self, *args):
+        logging.debug("Exiting context. Closing connection to database.")
 
-    @abstractmethod
-    def insert_item(self, item: Item):
-        raise NotImplementedError
 
-    @abstractmethod
-    def update_item(self, item_id, item: Item):
-        raise NotImplementedError
+class PostgresUnitOfWork(AbstractUnitOfWork):
+    def __init__(self, connection: dict):
+        self.session_factory = PostgresConnector(**connection)
 
-    @abstractmethod
-    def delete_item(self, item_id):
-        raise NotImplementedError
+    def __enter__(self):
+        try:
+            self.session = self.session_factory.connect()
+            self.repository = PostgresRepository(self.session)
+            super().__enter__()
+        except Exception as err:
+            if self.session_factory.connection != None:
+                self.session_factory.connection.close()
+            raise err
+
+    def __exit__(self, *args):
+        super().__exit__(*args)
+        try:
+            self.session_factory.disconnect()
+        except Exception as err:
+            raise err
