@@ -1,7 +1,7 @@
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Query, Response
 from src.domain.model import ItemBaseSchema, ItemSchema
 from src.service import services
 from src.service.unit_of_work import PostgresUnitOfWork
@@ -11,18 +11,18 @@ app = FastAPI()
 
 
 connection = {
-    "username": os.environ.get("db_user"),
-    "password": os.environ.get("db_password"),
-    "host": os.environ.get("db_host"),
+    "username": os.environ.get("db_user", "postgres"),
+    "password": os.environ.get("db_password", "test1234"),
+    "host": os.environ.get("db_host", "localhost"),
     "port": int(os.environ.get("db_port", "5432")),
-    "database_name": os.environ.get("db_name"),
+    "database_name": os.environ.get("db_name", "postgres"),
 }
 
 
 @app.get("/items", response_model=list[ItemSchema])
-def get_items():
+def get_items(limit: int = Query(20, ge=0), offset: int = Query(0, ge=0)):
     try:
-        results = services.get_items(uow=PostgresUnitOfWork(connection))
+        results = services.get_items(limit, offset, uow=PostgresUnitOfWork(connection))
         if not results:
             return Response(status_code=204)
         return results

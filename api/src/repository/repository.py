@@ -8,7 +8,7 @@ from src.utils.exceptions import IdNotFound
 
 class AbstractRepository(ABC):
     @abstractmethod
-    def get_items(self) -> list[Item]:
+    def get_items(self, limit, offset) -> list[Item]:
         raise NotImplementedError
 
     @abstractmethod
@@ -43,9 +43,9 @@ class PostgresRepository(AbstractRepository):
             logging.error(f"Caught error during getting Item(Id {item_id}): {err}")
             raise err
 
-    def get_items(self, skip: int = 0, limit: int = 100) -> list[Item]:
+    def get_items(self, limit, offset) -> list[Item]:
         try:
-            return self.session.query(Item).offset(skip).limit(limit).all()
+            return self.session.query(Item).offset(offset).limit(limit).all()
         except Exception as err:
             logging.error(f"Caught error during getting Items: {err}")
             raise err

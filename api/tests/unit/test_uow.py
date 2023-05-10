@@ -13,7 +13,7 @@ def test_unit_of_work_return_get_item(mock_postgres_connection, connection_dict)
 def test_unit_of_work_return_get_items(mock_postgres_connection, connection_dict):
     uow = PostgresUnitOfWork(connection_dict)
     with uow:
-        results = uow.repository.get_items()
+        results = uow.repository.get_items(limit=10, offset=0)
     assert all(isinstance(result, Item) for result in results)
 
 

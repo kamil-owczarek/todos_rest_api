@@ -11,7 +11,7 @@ def test_get_item(fake_uow):
 
 
 def test_get_items(fake_uow):
-    results = services.get_items(fake_uow)
+    results = services.get_items(limit=10, offset=0, uow=fake_uow)
     assert results[0].id == 1
     assert results[0].title == "test title"
     assert results[0].description == "test description"
@@ -43,9 +43,9 @@ def test_update_item(fake_uow):
 
 
 def test_delete_item(fake_uow):
-    expected_length = len(services.get_items(fake_uow)) - 1
+    expected_length = len(services.get_items(limit=10, offset=0, uow=fake_uow)) - 1
     delete_record = services.get_item(2, fake_uow)
     services.delete_item(2, fake_uow)
-    result = services.get_items(fake_uow)
+    result = services.get_items(limit=10, offset=0, uow=fake_uow)
     assert len(result) == expected_length
     assert delete_record not in result

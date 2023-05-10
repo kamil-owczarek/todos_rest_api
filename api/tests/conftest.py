@@ -109,9 +109,21 @@ class FakeErrorSession:
         return True
 
 
-class FakeFilterResult:
+class FakeCursor:
     def __init__(self, results: list) -> None:
         self.results = [Item(**result._asdict()) for result in results]
+
+    def filter(self, *args, **kwargs):
+        return self
+
+    def offset(self, *args):
+        return self
+
+    def limit(self, *args):
+        return self
+
+    def all(self):
+        return self.results
 
     def count(self):
         return 1
@@ -129,25 +141,11 @@ class FakeFilterResult:
         return True
 
 
-class FakeCursor:
-    def __init__(self, results: list) -> None:
-        self.fake_result = FakeFilterResult(results)
-
-    def filter(self, *args, **kwargs):
-        return self.fake_result
-
-    def offset(self, *args, **kwargs):
-        return self
-
-    def limit(self, *args):
-        return self.fake_result
-
-
 class FakeRepository(AbstractRepository):
     def __init__(self, records: list):
         self.records = records
 
-    def get_items(self):
+    def get_items(self, limit, offset):
         return [
             Item(**FakeItemBaseSchema._asdict()) for FakeItemBaseSchema in self.records
         ]
