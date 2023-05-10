@@ -72,6 +72,13 @@ def test_endpoint_post_item(mock_postgres_connection):
     assert result.status_code == 201
 
 
+def test_endpoint_post_invalid_item(mock_postgres_connection):
+    client = TestClient(app)
+    item = {"title": "new", "completed": True}
+    result = client.post("/items", content=json.dumps(item))
+    assert result.status_code == 422
+
+
 @pytest.mark.parametrize(
     "error_session_fixture", [Exception], indirect=["error_session_fixture"]
 )
@@ -89,6 +96,13 @@ def test_endpoint_patch_item(mock_postgres_connection):
     item = {"title": "updated", "description": "updated", "completed": False}
     result = client.patch("/items/1", content=json.dumps(item))
     assert result.status_code == 204
+
+
+def test_endpoint_patch_invalid_item(mock_postgres_connection):
+    client = TestClient(app)
+    item = {"description": "updated", "completed": False}
+    result = client.patch("/items/1", content=json.dumps(item))
+    assert result.status_code == 422
 
 
 @pytest.mark.parametrize(
