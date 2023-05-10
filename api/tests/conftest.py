@@ -81,7 +81,7 @@ class FakeSession:
     def __init__(self, results) -> None:
         self.results = results
 
-    def execute(self, *args):
+    def execute(self, *args, **kwargs):
         return FakeCursor(self.results)
 
     def commit(self):
@@ -93,7 +93,7 @@ class FakeErrorSession:
         self.exception = exception
         self.results = results
 
-    def execute(self, *args):
+    def execute(self, *args, **kwargs):
         raise self.exception
 
     def commit():
