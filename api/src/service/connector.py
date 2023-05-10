@@ -14,7 +14,7 @@ class DatabaseConnector(ABC):
 
 
 class PostgresConnector(DatabaseConnector):
-    def __init__(self, username, password, host, database_name, port=5432):
+    def __init__(self, username, password, host, database_name, port):
         self.username = username
         self.password = password
         self.host = host

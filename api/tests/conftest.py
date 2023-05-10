@@ -110,6 +110,9 @@ class FakeCursor:
     def fetchone(self) -> FakeRow:
         return self.results[0]
 
+    def first(self) -> tuple:
+        return (1,)
+
 
 class FakeRepository(AbstractRepository):
     def __init__(self, records: list):

@@ -103,6 +103,18 @@ def test_endpoint_patch_item_raise_exception(
     assert result.status_code == 500
 
 
+@pytest.mark.parametrize(
+    "error_session_fixture", [IdNotFound], indirect=["error_session_fixture"]
+)
+def test_endpoint_patch_item_raise_id_not_found_error(
+    error_session_fixture, mock_postgres_error_connection
+):
+    client = TestClient(app)
+    item = {"title": "updated", "description": "updated", "completed": False}
+    result = client.patch("/items/1", content=json.dumps(item))
+    assert result.status_code == 404
+
+
 def test_endpoint_delete_item(mock_postgres_connection):
     client = TestClient(app)
     result = client.delete("/items/1")
@@ -118,3 +130,14 @@ def test_endpoint_delete_item_raise_exception(
     client = TestClient(app)
     result = client.delete("/items/1")
     assert result.status_code == 500
+
+
+@pytest.mark.parametrize(
+    "error_session_fixture", [IdNotFound], indirect=["error_session_fixture"]
+)
+def test_endpoint_delete_item_raise_id_not_found_error(
+    error_session_fixture, mock_postgres_error_connection
+):
+    client = TestClient(app)
+    result = client.delete("/items/1")
+    assert result.status_code == 404

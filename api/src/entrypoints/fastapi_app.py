@@ -53,6 +53,10 @@ def update_item(item_id: int, item: Item):
     try:
         services.update_item(item_id, item, uow=PostgresUnitOfWork(connection))
         return Response(status_code=204)
+    except IdNotFound:
+        raise HTTPException(
+            status_code=404, detail=f"Item with ID: {item_id} not found!"
+        )
     except Exception:
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -62,5 +66,9 @@ def delete_item(item_id: int):
     try:
         services.delete_item(item_id, uow=PostgresUnitOfWork(connection))
         return Response(status_code=204)
+    except IdNotFound:
+        raise HTTPException(
+            status_code=404, detail=f"Item with ID: {item_id} not found!"
+        )
     except Exception:
         raise HTTPException(status_code=500, detail="Internal Server Error")
