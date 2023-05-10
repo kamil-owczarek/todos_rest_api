@@ -1,11 +1,14 @@
+import logging
 import os
+
 from fastapi import FastAPI, HTTPException, Response
-from src.domain.model import Item
+from src.domain.model import ItemBaseSchema, ItemSchema
 from src.service import services
 from src.service.unit_of_work import PostgresUnitOfWork
 from src.utils.exceptions import IdNotFound
 
 app = FastAPI()
+
 
 connection = {
     "username": os.environ.get("db_user"),
@@ -16,18 +19,19 @@ connection = {
 }
 
 
-@app.get("/items", response_model=list[Item])
+@app.get("/items", response_model=list[ItemSchema])
 def get_items():
     try:
         results = services.get_items(uow=PostgresUnitOfWork(connection))
         if not results:
             return Response(status_code=204)
         return results
-    except Exception:
+    except Exception as err:
+        logging.error(f"Caught error during getting Items: {err}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-@app.get("/items/{item_id}", response_model=Item)
+@app.get("/items/{item_id}", response_model=ItemSchema)
 def get_item(item_id: int):
     try:
         return services.get_item(item_id, uow=PostgresUnitOfWork(connection))
@@ -35,21 +39,23 @@ def get_item(item_id: int):
         raise HTTPException(
             status_code=404, detail=f"Item with ID: {item_id} not found!"
         )
-    except Exception:
+    except Exception as err:
+        logging.error(f"Caught error during getting Item: {err}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.post("/items")
-def post_item(item: Item):
+def post_item(item: ItemBaseSchema):
     try:
         services.insert_item(item, uow=PostgresUnitOfWork(connection))
         return Response(status_code=201)
-    except Exception:
+    except Exception as err:
+        logging.error(f"Caught error during inserting Item: {err}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.patch("/items/{item_id}")
-def update_item(item_id: int, item: Item):
+def update_item(item_id: int, item: ItemBaseSchema):
     try:
         services.update_item(item_id, item, uow=PostgresUnitOfWork(connection))
         return Response(status_code=204)
@@ -57,7 +63,8 @@ def update_item(item_id: int, item: Item):
         raise HTTPException(
             status_code=404, detail=f"Item with ID: {item_id} not found!"
         )
-    except Exception:
+    except Exception as err:
+        logging.error(f"Caught error during updating Item: {err}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
@@ -70,5 +77,6 @@ def delete_item(item_id: int):
         raise HTTPException(
             status_code=404, detail=f"Item with ID: {item_id} not found!"
         )
-    except Exception:
+    except Exception as err:
+        logging.error(f"Caught error during Item deletion: {err}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
