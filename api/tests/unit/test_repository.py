@@ -1,7 +1,7 @@
 import pytest
-from src.domain.model import Item
-from src.utils.exceptions import IdNotFound
+from src.domain.model import Item, ItemBaseSchema
 from src.repository.repository import PostgresRepository
+from src.utils.exceptions import IdNotFound
 
 
 def test_get_item(session_fixture):
@@ -48,9 +48,11 @@ def test_gets_item_raise_exception(error_session_fixture):
 
 def test_insert_item(session_fixture):
     repository = PostgresRepository(session_fixture)
-    item = Item(**{"title": "new", "description": "new", "completed": True})
-    results = repository.insert_item(item)
-    assert results == True
+    item = ItemBaseSchema(**{"title": "new", "description": "new", "completed": True})
+    result = repository.insert_item(item)
+    assert result.title == "new"
+    assert result.description == "new"
+    assert result.completed == True
 
 
 @pytest.mark.parametrize(
@@ -59,13 +61,15 @@ def test_insert_item(session_fixture):
 def test_insert_item_raise_exception(error_session_fixture):
     with pytest.raises(Exception):
         repository = PostgresRepository(error_session_fixture)
-        item = Item(**{"title": "new", "description": "new", "completed": True})
+        item = ItemBaseSchema(
+            **{"title": "new", "description": "new", "completed": True}
+        )
         repository.insert_item(item)
 
 
 def test_update_item(session_fixture):
     repository = PostgresRepository(session_fixture)
-    item = Item(**{"title": "new", "description": "new", "completed": True})
+    item = ItemBaseSchema(**{"title": "new", "description": "new", "completed": True})
     results = repository.update_item(1, item)
     assert results == True
 

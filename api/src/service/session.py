@@ -1,41 +1,33 @@
 from abc import ABC, abstractmethod
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
-class DatabaseConnector(ABC):
+class DatabaseSession(ABC):
     @abstractmethod
-    def connect(self):
-        raise NotImplementedError
-
-    @abstractmethod
-    def disconnect(self):
+    def create_session(self):
         raise NotImplementedError
 
 
-class PostgresConnector(DatabaseConnector):
+class PostgresSession(DatabaseSession):
     def __init__(self, username, password, host, database_name, port):
         self.username = username
         self.password = password
         self.host = host
         self.port = port
         self.database_name = database_name
-        self.connection = None
+        self.__engine = self.__create_enginge()
+        self.session = None
 
-    def connect(self):
+    def create_session(self):
         try:
-            __engine = self.__create_enginge()
-            self.connection = __engine.connect()
-            return self.connection
+            self.session = sessionmaker(
+                autocommit=False, autoflush=False, bind=self.__engine
+            )
+            return self.session()
         except Exception:
             raise Exception
-
-    def disconnect(self):
-        try:
-            if self.connection != None:
-                self.connection.close()
-        except Exception as err:
-            raise err
 
     def __create_enginge(self):
         connection_string = "postgresql://{}:{}@{}:{}/{}".format(

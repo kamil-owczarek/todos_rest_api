@@ -1,22 +1,22 @@
 import pytest
-from src.service.connector import PostgresConnector
-
-from src.service.unit_of_work import AbstractUnitOfWork
+from src.domain.model import Item, ItemBaseSchema
 from src.repository.repository import AbstractRepository
-from src.domain.model import Item
+from src.service.session import PostgresSession
+from src.service.unit_of_work import AbstractUnitOfWork
 
 
 @pytest.fixture
 def test_items():
     return [
-        FakeRow(
+        FakeItemBaseSchema(
             {
                 "id": 1,
                 "title": "test title",
                 "description": "test description",
+                "completed": False,
             }
         ),
-        FakeRow(
+        FakeItemBaseSchema(
             {
                 "id": 2,
                 "title": "dummy title",
@@ -47,7 +47,7 @@ def mock_postgres_connection(monkeypatch, session_fixture):
     def mock_connection(*args, **kwargs):
         return session_fixture
 
-    monkeypatch.setattr(PostgresConnector, "connect", mock_connection)
+    monkeypatch.setattr(PostgresSession, "create_session", mock_connection)
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def mock_postgres_error_connection(monkeypatch, error_session_fixture):
     def mock_connection(*args, **kwargs):
         return error_session_fixture
 
-    monkeypatch.setattr(PostgresConnector, "connect", mock_connection)
+    monkeypatch.setattr(PostgresSession, "create_session", mock_connection)
 
 
 @pytest.fixture
@@ -69,7 +69,7 @@ def connection_dict():
     }
 
 
-class FakeRow:
+class FakeItemBaseSchema:
     def __init__(self, data: dict):
         self.data = data
 
@@ -81,10 +81,19 @@ class FakeSession:
     def __init__(self, results) -> None:
         self.results = results
 
-    def execute(self, *args, **kwargs):
+    def query(self, *args, **kwargs):
         return FakeCursor(self.results)
 
+    def close(self):
+        return True
+
+    def add(self, item):
+        self.results.append(item)
+
     def commit(self):
+        return True
+
+    def refresh(self, *args):
         return True
 
 
@@ -93,25 +102,45 @@ class FakeErrorSession:
         self.exception = exception
         self.results = results
 
-    def execute(self, *args, **kwargs):
+    def query(self, *args, **kwargs):
         raise self.exception
 
-    def commit():
+    def close(self):
+        return True
+
+
+class FakeFilterResult:
+    def __init__(self, results: list) -> None:
+        self.results = [Item(**result._asdict()) for result in results]
+
+    def count(self):
+        return 1
+
+    def first(self) -> Item:
+        return self.results[0]
+
+    def all(self):
+        return self.results
+
+    def update(self, *args):
+        return True
+
+    def delete(self):
         return True
 
 
 class FakeCursor:
-    def __init__(self, results) -> None:
-        self.results = results
+    def __init__(self, results: list) -> None:
+        self.fake_result = FakeFilterResult(results)
 
-    def fetchall(self):
-        return self.results
+    def filter(self, *args, **kwargs):
+        return self.fake_result
 
-    def fetchone(self) -> FakeRow:
-        return self.results[0]
+    def offset(self, *args, **kwargs):
+        return self
 
-    def first(self) -> tuple:
-        return (1,)
+    def limit(self, *args):
+        return self.fake_result
 
 
 class FakeRepository(AbstractRepository):
@@ -119,16 +148,18 @@ class FakeRepository(AbstractRepository):
         self.records = records
 
     def get_items(self):
-        return [Item(**Fakerow._asdict()) for Fakerow in self.records]
+        return [
+            Item(**FakeItemBaseSchema._asdict()) for FakeItemBaseSchema in self.records
+        ]
 
     def get_item(self, item_id: int):
         return Item(**self.records[item_id - 1]._asdict())
 
-    def insert_item(self, item: Item):
-        self.records.append(FakeRow(item.__dict__))
+    def insert_item(self, item: ItemBaseSchema):
+        self.records.append(FakeItemBaseSchema(item.__dict__))
 
-    def update_item(self, item_id, item: Item):
-        self.records[item_id - 1] = FakeRow(item.__dict__)
+    def update_item(self, item_id, item: ItemBaseSchema):
+        self.records[item_id - 1] = FakeItemBaseSchema(item.__dict__)
 
     def delete_item(self, item_id):
         self.records.pop(item_id - 1)

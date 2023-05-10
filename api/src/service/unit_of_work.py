@@ -1,7 +1,8 @@
-from abc import ABC
-from src.service.connector import PostgresConnector
-from src.repository.repository import AbstractRepository, PostgresRepository
 import logging
+from abc import ABC
+
+from src.repository.repository import AbstractRepository, PostgresRepository
+from src.service.session import PostgresSession
 
 
 class AbstractUnitOfWork(ABC):
@@ -16,21 +17,21 @@ class AbstractUnitOfWork(ABC):
 
 class PostgresUnitOfWork(AbstractUnitOfWork):
     def __init__(self, connection: dict):
-        self.session_factory = PostgresConnector(**connection)
+        self.session = PostgresSession(**connection)
 
     def __enter__(self):
         try:
-            self.session = self.session_factory.connect()
+            self.session = self.session.create_session()
             self.repository = PostgresRepository(self.session)
             super().__enter__()
         except Exception as err:
-            if self.session_factory.connection != None:
-                self.session_factory.connection.close()
+            if self.session != None:
+                self.session.close()
             raise err
 
     def __exit__(self, *args):
         super().__exit__(*args)
         try:
-            self.session_factory.disconnect()
+            self.session.close()
         except Exception as err:
             raise err

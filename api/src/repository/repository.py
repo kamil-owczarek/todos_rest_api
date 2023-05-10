@@ -1,26 +1,26 @@
 import logging
 from abc import ABC, abstractmethod
 
-from sqlalchemy import text
-from src.domain.model import Item
+from sqlalchemy.orm import Session
+from src.domain.model import Item, ItemBaseSchema
 from src.utils.exceptions import IdNotFound
 
 
 class AbstractRepository(ABC):
     @abstractmethod
-    def get_items(self):
+    def get_items(self) -> list[Item]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_item(self, item_id: int):
+    def get_item(self, item_id: int) -> Item:
         raise NotImplementedError
 
     @abstractmethod
-    def insert_item(self, item: Item):
+    def insert_item(self, item: ItemBaseSchema):
         raise NotImplementedError
 
     @abstractmethod
-    def update_item(self, item_id, item: Item):
+    def update_item(self, item_id, item: ItemBaseSchema):
         raise NotImplementedError
 
     @abstractmethod
@@ -29,17 +29,13 @@ class AbstractRepository(ABC):
 
 
 class PostgresRepository(AbstractRepository):
-    def __init__(self, client_session):
+    def __init__(self, client_session: Session):
         self.session = client_session
 
-    def get_item(self, item_id):
+    def get_item(self, item_id) -> Item:
         try:
             self.__check_if_item_exists(item_id)
-            sql_statement = text("SELECT * FROM Items WHERE Id = :item_id")
-            result = self.session.execute(
-                sql_statement, {"item_id": item_id}
-            ).fetchone()
-            return Item(**result._asdict())
+            return self.session.query(Item).filter(Item.id == item_id).first()
         except IdNotFound as err:
             logging.debug(f"Item with d: {item_id} not found in database!")
             raise err
@@ -47,34 +43,34 @@ class PostgresRepository(AbstractRepository):
             logging.error(f"Caught error during getting Item(Id {item_id}): {err}")
             raise err
 
-    def get_items(self):
+    def get_items(self, skip: int = 0, limit: int = 100) -> list[Item]:
         try:
-            sql_statement = text("SELECT * FROM Items")
-            result = self.session.execute(sql_statement).fetchall()
-            return [Item(**item._asdict()) for item in result]
+            return self.session.query(Item).offset(skip).limit(limit).all()
         except Exception as err:
             logging.error(f"Caught error during getting Items: {err}")
             raise err
 
-    def insert_item(self, item: Item):
+    def insert_item(self, item: ItemBaseSchema):
         try:
-            sql_statement = text(
-                "INSERT INTO Items (title, description, completed) VALUES(:title, :description, :completed)"
-            )
-            self.session.execute(sql_statement, item.dict())
+            db_item = Item(**item.dict())
+            self.session.add(db_item)
             self.session.commit()
-            return True
+            self.session.refresh(db_item)
+            return db_item
         except Exception as err:
             logging.error(f"Caught error during Item upload: {err}")
             raise err
 
-    def update_item(self, item_id, item: Item):
+    def update_item(self, item_id, item: ItemBaseSchema):
         try:
             self.__check_if_item_exists(item_id)
-            sql_statement = text(
-                "UPDATE Items SET title=:title, description=:description, completed=:completed WHERE Id = :item_id"
+            self.session.query(Item).filter(Item.id == item_id).update(
+                {
+                    Item.title: item.title,
+                    Item.description: item.description,
+                    Item.completed: item.completed,
+                }
             )
-            self.session.execute(sql_statement, {**item.dict(), "item_id": item_id})
             self.session.commit()
             return True
         except IdNotFound as err:
@@ -87,8 +83,7 @@ class PostgresRepository(AbstractRepository):
     def delete_item(self, item_id: int):
         try:
             self.__check_if_item_exists(item_id)
-            sql_statement = text("DELETE FROM Items WHERE Id = :item_id")
-            self.session.execute(sql_statement, {"item_id": item_id})
+            self.session.query(Item).filter(Item.id == item_id).delete()
             self.session.commit()
             return True
         except IdNotFound as err:
@@ -100,9 +95,8 @@ class PostgresRepository(AbstractRepository):
 
     def __check_if_item_exists(self, item_id: int) -> bool:
         try:
-            sql_statement = text("SELECT COUNT(*) FROM Items WHERE Id = :item_id")
-            result = self.session.execute(sql_statement, {"item_id": item_id}).first()
-            if result[0] > 0:
+            result = self.session.query(Item).filter(Item.id == item_id).count()
+            if result > 0:
                 return True
             else:
                 raise IdNotFound

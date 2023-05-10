@@ -1,4 +1,4 @@
-from src.domain.model import Item
+from src.domain.model import ItemBaseSchema
 from src.service.unit_of_work import AbstractUnitOfWork
 
 
@@ -12,12 +12,12 @@ def get_items(uow: AbstractUnitOfWork):
         return uow.repository.get_items()
 
 
-def insert_item(item: Item, uow: AbstractUnitOfWork):
+def insert_item(item: ItemBaseSchema, uow: AbstractUnitOfWork):
     with uow:
         return uow.repository.insert_item(item)
 
 
-def update_item(item_id, item: Item, uow: AbstractUnitOfWork):
+def update_item(item_id, item: ItemBaseSchema, uow: AbstractUnitOfWork):
     with uow:
         return uow.repository.update_item(item_id, item)
 

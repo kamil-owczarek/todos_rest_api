@@ -1,10 +1,10 @@
-from src.domain.model import Item
+from src.domain.model import ItemSchema
 
 
 def test_item_creation_from_dict_row(test_items):
-    results = [Item(**row._asdict()) for row in test_items]
-    assert isinstance(results[0], Item)
-    assert isinstance(results[1], Item)
+    results = [ItemSchema(**row._asdict()) for row in test_items]
+    assert isinstance(results[0], ItemSchema)
+    assert isinstance(results[1], ItemSchema)
     assert results[0].id == 1
     assert results[0].title == "test title"
     assert results[0].description == "test description"
