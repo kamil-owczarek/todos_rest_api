@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException, Response
 from src.domain.model import Item
 from src.service import services
@@ -7,11 +8,11 @@ from src.utils.exceptions import IdNotFound
 app = FastAPI()
 
 connection = {
-    "username": "",
-    "password": "",
-    "host": "",
-    "port": 5432,
-    "database_name": "",
+    "username": os.environ.get("db_user"),
+    "password": os.environ.get("db_password"),
+    "host": os.environ.get("db_host"),
+    "port": int(os.environ.get("db_port", "5432")),
+    "database_name": os.environ.get("db_name"),
 }
 
 
@@ -41,10 +42,8 @@ def get_item(item_id: int):
 @app.post("/items")
 def post_item(item: Item):
     try:
-        if services.insert_item(item, uow=PostgresUnitOfWork(connection)):
-            return Response(status_code=201)
-        else:
-            raise Exception
+        services.insert_item(item, uow=PostgresUnitOfWork(connection))
+        return Response(status_code=201)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -52,10 +51,8 @@ def post_item(item: Item):
 @app.patch("/items/{item_id}")
 def update_item(item_id: int, item: Item):
     try:
-        if services.update_item(item_id, item, uow=PostgresUnitOfWork(connection)):
-            return Response(status_code=204)
-        else:
-            raise Exception
+        services.update_item(item_id, item, uow=PostgresUnitOfWork(connection))
+        return Response(status_code=204)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -63,9 +60,7 @@ def update_item(item_id: int, item: Item):
 @app.delete("/items/{item_id}")
 def delete_item(item_id: int):
     try:
-        if services.delete_item(item_id, uow=PostgresUnitOfWork(connection)):
-            return Response(status_code=204)
-        else:
-            raise Exception
+        services.delete_item(item_id, uow=PostgresUnitOfWork(connection))
+        return Response(status_code=204)
     except Exception:
         raise HTTPException(status_code=500, detail="Internal Server Error")

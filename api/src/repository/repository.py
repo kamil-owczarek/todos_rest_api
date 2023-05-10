@@ -1,7 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
+from types import NoneType
 
-from sqlalchemy import Row, text
+from sqlalchemy import text
 from src.domain.model import Item
 from src.utils.exceptions import IdNotFound
 
@@ -39,7 +40,7 @@ class PostgresRepository(AbstractRepository):
                 f"SELECT * FROM {self.table_name} WHERE Id = {item_id}"
             )
             result = self.session.execute(sql_statement).fetchone()
-            if not isinstance(result, Row):
+            if isinstance(result, NoneType):
                 raise IdNotFound
             return Item(**result._asdict())
         except Exception as err:
