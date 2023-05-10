@@ -1,5 +1,5 @@
 from src.service import services
-from src.domain.model import Item
+from src.domain.model import ItemSchema
 
 
 def test_get_item(fake_uow):
@@ -23,7 +23,7 @@ def test_get_items(fake_uow):
 
 
 def test_insert_item(fake_uow):
-    item = Item(id=3, title="new", description="new", completed=True)
+    item = ItemSchema(id=3, title="new", description="new", completed=True)
     services.insert_item(item, fake_uow)
     result = services.get_item(3, fake_uow)
     assert result.id == 3
@@ -33,7 +33,7 @@ def test_insert_item(fake_uow):
 
 
 def test_update_item(fake_uow):
-    item = Item(id=1, title="updated", description="updated", completed=True)
+    item = ItemSchema(id=1, title="updated", description="updated", completed=True)
     services.update_item(1, item, fake_uow)
     result = services.get_item(1, fake_uow)
     assert result.id == 1

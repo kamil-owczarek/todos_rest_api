@@ -8,11 +8,11 @@ from src.utils.exceptions import IdNotFound
 
 class AbstractRepository(ABC):
     @abstractmethod
-    def get_items(self):
+    def get_items(self) -> list[Item]:
         raise NotImplementedError
 
     @abstractmethod
-    def get_item(self, item_id: int):
+    def get_item(self, item_id: int) -> Item:
         raise NotImplementedError
 
     @abstractmethod
@@ -32,7 +32,7 @@ class PostgresRepository(AbstractRepository):
     def __init__(self, client_session: Session):
         self.session = client_session
 
-    def get_item(self, item_id):
+    def get_item(self, item_id) -> Item:
         try:
             self.__check_if_item_exists(item_id)
             return self.session.query(Item).filter(Item.id == item_id).first()
@@ -43,7 +43,7 @@ class PostgresRepository(AbstractRepository):
             logging.error(f"Caught error during getting Item(Id {item_id}): {err}")
             raise err
 
-    def get_items(self, skip: int = 0, limit: int = 100):
+    def get_items(self, skip: int = 0, limit: int = 100) -> list[Item]:
         try:
             return self.session.query(Item).offset(skip).limit(limit).all()
         except Exception as err:
@@ -72,6 +72,7 @@ class PostgresRepository(AbstractRepository):
                 }
             )
             self.session.commit()
+            return True
         except IdNotFound as err:
             logging.debug(f"Item with d: {item_id} not found in database!")
             raise err
@@ -84,6 +85,7 @@ class PostgresRepository(AbstractRepository):
             self.__check_if_item_exists(item_id)
             self.session.query(Item).filter(Item.id == item_id).delete()
             self.session.commit()
+            return True
         except IdNotFound as err:
             logging.debug(f"Item with d: {item_id} not found in database!")
             raise err
