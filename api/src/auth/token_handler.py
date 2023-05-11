@@ -1,9 +1,7 @@
 import logging
-import os
 import time
 
 import jwt
-
 from src.config.settings import settings
 
 

@@ -1,5 +1,4 @@
 import logging
-import os
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from src.auth.token import JWTToken
@@ -20,15 +19,6 @@ app = FastAPI(
     docs_url="/docs",
     openapi_url="/openapi.json",
 )
-
-
-#  connection = {
-#     "username": os.environ.get("db_user", "postgres"),
-#     "password": os.environ.get("db_password", "test1234"),
-#     "host": os.environ.get("db_host", "localhost"),
-#     "port": int(os.environ.get("db_port", "5432")),
-#     "database_name": os.environ.get("db_name", "postgres"),
-# }
 
 
 @app.get(
