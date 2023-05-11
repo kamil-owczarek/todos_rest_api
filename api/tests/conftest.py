@@ -61,17 +61,6 @@ def mock_postgres_error_connection(monkeypatch, error_session_fixture):
 
 
 @pytest.fixture
-def connection_dict():
-    return {
-        "username": "test",
-        "password": "test",
-        "host": "test",
-        "port": 5432,
-        "database_name": "test",
-    }
-
-
-@pytest.fixture
 def auth_header():
     token = create_token()
     header = {"Authorization": f"Bearer {token['access_token']}"}
