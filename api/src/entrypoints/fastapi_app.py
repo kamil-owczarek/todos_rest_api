@@ -11,18 +11,29 @@ app = FastAPI()
 
 
 connection = {
-    "username": os.environ.get("db_user", "postgres"),
-    "password": os.environ.get("db_password", "test1234"),
-    "host": os.environ.get("db_host", "localhost"),
+    "username": os.environ.get("db_user"),
+    "password": os.environ.get("db_password"),
+    "host": os.environ.get("db_host"),
     "port": int(os.environ.get("db_port", "5432")),
-    "database_name": os.environ.get("db_name", "postgres"),
+    "database_name": os.environ.get("db_name"),
 }
 
 
 @app.get("/items", response_model=list[ItemSchema])
-def get_items(limit: int = Query(20, ge=0), offset: int = Query(0, ge=0)):
+def get_items(
+    limit: int = Query(20, ge=0),
+    offset: int = Query(0, ge=0),
+    filter_field: str | None = Query(None),
+    filter_value: str | bool | None = Query(None),
+):
     try:
-        results = services.get_items(limit, offset, uow=PostgresUnitOfWork(connection))
+        results = services.get_items(
+            limit,
+            offset,
+            filter_field,
+            filter_value,
+            uow=PostgresUnitOfWork(connection),
+        )
         if not results:
             return Response(status_code=204)
         return results

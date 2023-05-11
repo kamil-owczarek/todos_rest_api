@@ -145,7 +145,13 @@ class FakeRepository(AbstractRepository):
     def __init__(self, records: list):
         self.records = records
 
-    def get_items(self, limit, offset):
+    def get_items(
+        self,
+        limit,
+        offset,
+        filter_field,
+        filter_value,
+    ):
         return [
             Item(**FakeItemBaseSchema._asdict()) for FakeItemBaseSchema in self.records
         ]
