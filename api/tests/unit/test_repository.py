@@ -25,7 +25,7 @@ def test_get_item_raise_id_not_found(error_session_fixture):
 
 def test_get_items(session_fixture):
     repository = PostgresRepository(session_fixture)
-    results = repository.get_items()
+    results = repository.get_items(10, 0, None, None)
     assert [isinstance(result, Item) for result in results]
     assert results[0].id == 1
     assert results[0].title == "test title"

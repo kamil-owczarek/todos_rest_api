@@ -8,7 +8,9 @@ from src.utils.exceptions import IdNotFound
 
 class AbstractRepository(ABC):
     @abstractmethod
-    def get_items(self) -> list[Item]:
+    def get_items(
+        self, limit, offset, filter_field, filter_value
+    ) -> list[Item]:
         raise NotImplementedError
 
     @abstractmethod
@@ -43,9 +45,15 @@ class PostgresRepository(AbstractRepository):
             logging.error(f"Caught error during getting Item(Id {item_id}): {err}")
             raise err
 
-    def get_items(self, skip: int = 0, limit: int = 100) -> list[Item]:
+    def get_items(
+        self, limit, offset, filter_field, filter_value
+    ) -> list[Item]:
         try:
-            return self.session.query(Item).offset(skip).limit(limit).all()
+            query = self.session.query(Item)
+            query = self.__prepare_query_filters(
+                query, filter_field, filter_value
+            )
+            return query.offset(offset).limit(limit).all()
         except Exception as err:
             logging.error(f"Caught error during getting Items: {err}")
             raise err
@@ -105,3 +113,13 @@ class PostgresRepository(AbstractRepository):
         except Exception as err:
             logging.error(f"Caught error during retrieving Item from database: {err}")
             raise err
+
+    def __prepare_query_filters(self, query, filter_field, filter_value):
+        match filter_field:
+            case "title":
+                query = query.filter(Item.title.contains(filter_value))
+            case "description":
+                query = query.filter(Item.description.contains(filter_value))
+            case "completed":
+                query = query.filter(Item.completed == filter_value)
+        return query

@@ -7,9 +7,11 @@ def get_item(item_id: int, uow: AbstractUnitOfWork):
         return uow.repository.get_item(item_id)
 
 
-def get_items(uow: AbstractUnitOfWork):
+def get_items(
+    limit, offset, filter_field, filter_value, uow: AbstractUnitOfWork
+):
     with uow:
-        return uow.repository.get_items()
+        return uow.repository.get_items(limit, offset, filter_field, filter_value)
 
 
 def insert_item(item: ItemBaseSchema, uow: AbstractUnitOfWork):
