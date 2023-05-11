@@ -4,7 +4,7 @@ import os
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from src.auth.token import JWTToken
 from src.auth.token_handler import create_token
-from src.domain.model import ItemBaseSchema, ItemSchema
+from src.domain.schema import ItemBaseSchema, ItemSchema
 from src.service import services
 from src.service.unit_of_work import PostgresUnitOfWork
 from src.utils.exceptions import IdNotFound
@@ -38,10 +38,10 @@ connection = {
     description="Retrieve todo items based on the provided filters.",
 )
 def get_items(
-    limit: int = Query(20, ge=0),
-    offset: int = Query(0, ge=0),
-    filter_field: str | None = Query(None),
-    filter_value: str | bool | None = Query(None),
+    limit: int = Query(20, ge=0, description="Limit page items size."),
+    offset: int = Query(0, ge=0, description="Page number."),
+    filter_field: str | None = Query(None, description="Filtering field name."),
+    filter_value: str | bool | None = Query(None, description="Filter value."),
 ):
     try:
         results = services.get_items(

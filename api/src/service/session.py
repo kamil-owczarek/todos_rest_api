@@ -11,7 +11,9 @@ class AbstractSession(ABC):
 
 
 class PostgresSession(AbstractSession):
-    def __init__(self, username, password, host, database_name, port):
+    def __init__(
+        self, username: str, password: str, host: str, database_name: str, port: int
+    ):
         self.username = username
         self.password = password
         self.host = host

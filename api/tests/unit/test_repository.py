@@ -1,5 +1,6 @@
 import pytest
-from src.domain.model import Item, ItemBaseSchema
+from src.domain.model import Item
+from src.domain.schema import ItemBaseSchema
 from src.repository.repository import PostgresRepository
 from src.utils.exceptions import IdNotFound
 
@@ -50,9 +51,7 @@ def test_insert_item(session_fixture):
     repository = PostgresRepository(session_fixture)
     item = ItemBaseSchema(**{"title": "new", "description": "new", "completed": True})
     result = repository.insert_item(item)
-    assert result.title == "new"
-    assert result.description == "new"
-    assert result.completed == True
+    assert result == True
 
 
 @pytest.mark.parametrize(

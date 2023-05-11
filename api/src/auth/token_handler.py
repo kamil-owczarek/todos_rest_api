@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -8,7 +9,7 @@ JWT_ALGORITHM = os.environ.get("jwt_algorithm", "HS256")
 JWT_TOKEN_EXPIRATION = int(os.environ.get("jwt_token_expiration", "600"))
 
 
-def token_response(token: str):
+def token_response(token: str) -> dict[str, str]:
     return {"access_token": token}
 
 
@@ -23,5 +24,6 @@ def decode_token(token: str) -> dict:
     try:
         decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         return decoded_token if decoded_token["expires"] >= time.time() else None
-    except:
-        return {}
+    except Exception as err:
+        logging.error("Caught exception during JWT token decoding.")
+        raise err
