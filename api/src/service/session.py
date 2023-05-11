@@ -4,13 +4,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-class DatabaseSession(ABC):
+class AbstractSession(ABC):
     @abstractmethod
     def create_session(self):
         raise NotImplementedError
 
 
-class PostgresSession(DatabaseSession):
+class PostgresSession(AbstractSession):
     def __init__(self, username, password, host, database_name, port):
         self.username = username
         self.password = password
