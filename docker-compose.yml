@@ -5,16 +5,22 @@ version: '3.8'
 services:
   api:
     build: ./api
-    command: uvicorn src.entrypoints.fastapi_app:app --host 0.0.0.0
+    command: uvicorn src.entrypoints.fastapi_app:app --host 0.0.0.0 --port 8081
     ports:
-      - 8008:8000
+      - 8081:8081
     environment:
-      - jwt_secret=test
-      - db_user=postgres
-      - db_password=test1234
-      - db_host=db
-      - db_port=5432
-      - db_name=postgres
+      - jwt_secret=
+      - db_user=
+      - db_password=
+      - db_host=
+      - db_port=
+      - db_name=
+      - credential_type=cloud
+      - key_vault_url=
+      - azure_secrets=["jwt-secret", "db-user", "db-password", "db-host", "db-port", "db-name"]
+      - AZURE_CLIENT_ID=
+      - AZURE_TENANT_ID=
+      - AZURE_CLIENT_SECRET=
     depends_on:
       - db
 
@@ -24,7 +30,7 @@ services:
       - postgres_data:/var/lib/postgresql/data/
       - ./sql/prepare_data.sql:/docker-entrypoint-initdb.d/prepare_data.sql
     expose:
-      - 5432
+      - 127.0.0.1:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=test1234

@@ -1,4 +1,8 @@
+import json
+import os
+
 from pydantic import BaseSettings
+from src.azure.key_vault import AzureVault
 
 
 class Settings(BaseSettings):
@@ -12,4 +16,20 @@ class Settings(BaseSettings):
     db_name: str
 
 
-settings = Settings()
+def prepare_settings() -> Settings:
+    key_vault = AzureVault(os.environ.get("key_vault_url"))
+
+    env = os.environ.get("credential_type")
+    if env == "local":
+        return Settings()
+    if env == "cloud":
+        secrets = json.loads(os.environ.get("azure_secrets"))
+        return Settings(
+            **{
+                secret.replace("-", "_"): key_vault.get_secret(secret)
+                for secret in secrets
+            }
+        )
+
+
+settings = prepare_settings()

@@ -16,4 +16,8 @@ COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
+RUN	apt-get update && apt-get -y install curl
+
+RUN	curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
 COPY ./src /app/src
