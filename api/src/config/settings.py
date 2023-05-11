@@ -17,12 +17,11 @@ class Settings(BaseSettings):
 
 
 def prepare_settings() -> Settings:
-    key_vault = AzureVault(os.environ.get("key_vault_url"))
-
     env = os.environ.get("credential_type")
     if env == "local":
         return Settings()
     if env == "cloud":
+        key_vault = AzureVault(os.environ.get("key_vault_url"))
         secrets = json.loads(os.environ.get("azure_secrets"))
         return Settings(
             **{

@@ -37,4 +37,5 @@ env = [
     "db_host=test",
     "db_port=5432",
     "db_name=test",
+    "credential_type=local",
 ]
