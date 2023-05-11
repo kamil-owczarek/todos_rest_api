@@ -1,4 +1,4 @@
-from src.domain.model import ItemSchema
+from src.domain.schema import ItemSchema
 
 
 def test_item_creation_from_dict_row(test_items):

@@ -1,32 +1,37 @@
 import logging
 from abc import ABC, abstractmethod
 
-from sqlalchemy.orm import Session
-from src.domain.model import Item, ItemBaseSchema
+from sqlalchemy.orm import Session, Query
+from src.domain.model import Item
+from src.domain.schema import ItemBaseSchema
 from src.utils.exceptions import IdNotFound
 
 
 class AbstractRepository(ABC):
     @abstractmethod
-    def get_items(
-        self, limit, offset, filter_field, filter_value
-    ) -> list[Item]:
-        raise NotImplementedError
-
-    @abstractmethod
     def get_item(self, item_id: int) -> Item:
         raise NotImplementedError
 
     @abstractmethod
-    def insert_item(self, item: ItemBaseSchema):
+    def get_items(
+        self,
+        limit: int,
+        offset: int,
+        filter_field: str | None,
+        filter_value: str | bool | None,
+    ) -> list[Item]:
         raise NotImplementedError
 
     @abstractmethod
-    def update_item(self, item_id, item: ItemBaseSchema):
+    def insert_item(self, item: ItemBaseSchema) -> bool:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_item(self, item_id):
+    def update_item(self, item_id: int, item: ItemBaseSchema) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_item(self, item_id: int) -> bool:
         raise NotImplementedError
 
 
@@ -34,7 +39,7 @@ class PostgresRepository(AbstractRepository):
     def __init__(self, client_session: Session):
         self.session = client_session
 
-    def get_item(self, item_id) -> Item:
+    def get_item(self, item_id: int) -> Item:
         try:
             self.__check_if_item_exists(item_id)
             return self.session.query(Item).filter(Item.id == item_id).first()
@@ -46,13 +51,15 @@ class PostgresRepository(AbstractRepository):
             raise err
 
     def get_items(
-        self, limit, offset, filter_field, filter_value
+        self,
+        limit: int,
+        offset: int,
+        filter_field: str | None,
+        filter_value: str | bool | None,
     ) -> list[Item]:
         try:
             query = self.session.query(Item)
-            query = self.__prepare_query_filters(
-                query, filter_field, filter_value
-            )
+            query = self.__prepare_query_filters(query, filter_field, filter_value)
             return query.offset(offset).limit(limit).all()
         except Exception as err:
             logging.error(f"Caught error during getting Items: {err}")
@@ -64,12 +71,12 @@ class PostgresRepository(AbstractRepository):
             self.session.add(db_item)
             self.session.commit()
             self.session.refresh(db_item)
-            return db_item
+            return True
         except Exception as err:
             logging.error(f"Caught error during Item upload: {err}")
             raise err
 
-    def update_item(self, item_id, item: ItemBaseSchema):
+    def update_item(self, item_id: int, item: ItemBaseSchema):
         try:
             self.__check_if_item_exists(item_id)
             self.session.query(Item).filter(Item.id == item_id).update(
@@ -114,7 +121,9 @@ class PostgresRepository(AbstractRepository):
             logging.error(f"Caught error during retrieving Item from database: {err}")
             raise err
 
-    def __prepare_query_filters(self, query, filter_field, filter_value):
+    def __prepare_query_filters(
+        self, query: Query, filter_field: str | None, filter_value: str | bool | None
+    ) -> Query:
         match filter_field:
             case "title":
                 query = query.filter(Item.title.contains(filter_value))

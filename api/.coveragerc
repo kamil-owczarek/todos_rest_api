@@ -3,3 +3,9 @@ omit = *__init__*, *test*
 
 [report]
 omit = *__init__*, *test*
+
+exclude_lines =
+    pragma: no cover
+    @abstract
+    raise NotImplementedError
+    logging

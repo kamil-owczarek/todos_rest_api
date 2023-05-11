@@ -23,3 +23,6 @@ pytest-cov = "^4.0.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--cov-config=.coveragerc --cov=. --cov-report=xml --cov-report term-missing --no-cov-on-fail --junitxml=test_output.xml"

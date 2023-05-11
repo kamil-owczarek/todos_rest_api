@@ -1,9 +1,10 @@
 import pytest
-from src.domain.model import Item, ItemBaseSchema
+from src.auth.token_handler import create_token
+from src.domain.model import Item
+from src.domain.schema import ItemBaseSchema
 from src.repository.repository import AbstractRepository
 from src.service.session import PostgresSession
 from src.service.unit_of_work import AbstractUnitOfWork
-from src.auth.token_handler import create_token
 
 
 @pytest.fixture
@@ -85,40 +86,8 @@ class FakeItemBaseSchema:
         return self.data
 
 
-class FakeSession:
-    def __init__(self, results) -> None:
-        self.results = results
-
-    def query(self, *args, **kwargs):
-        return FakeCursor(self.results)
-
-    def close(self):
-        return True
-
-    def add(self, item):
-        self.results.append(item)
-
-    def commit(self):
-        return True
-
-    def refresh(self, *args):
-        return True
-
-
-class FakeErrorSession:
-    def __init__(self, exception, results) -> None:
-        self.exception = exception
-        self.results = results
-
-    def query(self, *args, **kwargs):
-        raise self.exception
-
-    def close(self):
-        return True
-
-
 class FakeCursor:
-    def __init__(self, results: list) -> None:
+    def __init__(self, results: list[FakeItemBaseSchema]):
         self.results = [Item(**result._asdict()) for result in results]
 
     def filter(self, *args, **kwargs):
@@ -130,7 +99,7 @@ class FakeCursor:
     def limit(self, *args):
         return self
 
-    def all(self):
+    def all(self) -> list[Item]:
         return self.results
 
     def count(self):
@@ -139,44 +108,73 @@ class FakeCursor:
     def first(self) -> Item:
         return self.results[0]
 
-    def all(self):
-        return self.results
-
-    def update(self, *args):
+    def update(self, *args) -> bool:
         return True
 
-    def delete(self):
+    def delete(self) -> bool:
+        return True
+
+
+class FakeSession:
+    def __init__(self, results: list[FakeItemBaseSchema]):
+        self.results = results
+
+    def query(self, *args, **kwargs) -> FakeCursor:
+        return FakeCursor(self.results)
+
+    def close(self) -> bool:
+        return True
+
+    def add(self, item):
+        self.results.append(item)
+
+    def commit(self) -> bool:
+        return True
+
+    def refresh(self, *args) -> bool:
+        return True
+
+
+class FakeErrorSession:
+    def __init__(self, exception: Exception, results: list[FakeItemBaseSchema]):
+        self.exception = exception
+        self.results = results
+
+    def query(self, *args, **kwargs) -> Exception:
+        raise self.exception
+
+    def close(self) -> bool:
         return True
 
 
 class FakeRepository(AbstractRepository):
-    def __init__(self, records: list):
+    def __init__(self, records: list[FakeItemBaseSchema]):
         self.records = records
 
     def get_items(
         self,
-        limit,
-        offset,
-        filter_field,
-        filter_value,
-    ):
+        limit: int,
+        offset: int,
+        filter_field: str | None,
+        filter_value: str | bool | None,
+    ) -> list[Item]:
         return [
             Item(**FakeItemBaseSchema._asdict()) for FakeItemBaseSchema in self.records
         ]
 
-    def get_item(self, item_id: int):
+    def get_item(self, item_id: int) -> Item:
         return Item(**self.records[item_id - 1]._asdict())
 
     def insert_item(self, item: ItemBaseSchema):
         self.records.append(FakeItemBaseSchema(item.__dict__))
 
-    def update_item(self, item_id, item: ItemBaseSchema):
+    def update_item(self, item_id: int, item: ItemBaseSchema):
         self.records[item_id - 1] = FakeItemBaseSchema(item.__dict__)
 
-    def delete_item(self, item_id):
+    def delete_item(self, item_id: int):
         self.records.pop(item_id - 1)
 
 
 class FakeUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, records: list):
+    def __init__(self, records: list[FakeItemBaseSchema]):
         self.repository = FakeRepository(records)

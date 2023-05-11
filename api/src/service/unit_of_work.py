@@ -16,7 +16,7 @@ class AbstractUnitOfWork(ABC):
 
 
 class PostgresUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, connection):
+    def __init__(self, connection: dict):
         self.session = PostgresSession(**connection)
 
     def __enter__(self):
