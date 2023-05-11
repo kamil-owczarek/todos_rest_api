@@ -3,6 +3,7 @@ from src.domain.model import Item, ItemBaseSchema
 from src.repository.repository import AbstractRepository
 from src.service.session import PostgresSession
 from src.service.unit_of_work import AbstractUnitOfWork
+from src.auth.token_handler import create_token
 
 
 @pytest.fixture
@@ -67,6 +68,13 @@ def connection_dict():
         "port": 5432,
         "database_name": "test",
     }
+
+
+@pytest.fixture
+def auth_header():
+    token = create_token()
+    header = {"Authorization": f"Bearer {token['access_token']}"}
+    return header
 
 
 class FakeItemBaseSchema:
