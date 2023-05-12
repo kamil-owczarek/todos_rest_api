@@ -1,11 +1,17 @@
+"""
+Module contains Unit Of Work logic.
+"""
+
 import logging
 from abc import ABC
 
-from src.repository.repository import AbstractRepository, PostgresRepository
-from src.service.session import PostgresSession
+from src.repository.repository import AbstractRepository, PostgreSqlRepository
+from src.service.session import PostgreSqlSession
 
 
 class AbstractUnitOfWork(ABC):
+    """Base object for Unit Of Work logic."""
+
     repository: AbstractRepository
 
     def __enter__(self):
@@ -15,17 +21,19 @@ class AbstractUnitOfWork(ABC):
         logging.debug("Exiting context. Closing connection to database.")
 
 
-class PostgresUnitOfWork(AbstractUnitOfWork):
+class PostgreSqlUnitOfWork(AbstractUnitOfWork):
+    """Unit Of Work logic for PostgreSQL database."""
+
     def __init__(self):
-        self.session = PostgresSession()
+        self.session = PostgreSqlSession()
 
     def __enter__(self):
         try:
             self.session = self.session.create_session()
-            self.repository = PostgresRepository(self.session)
+            self.repository = PostgreSqlRepository(self.session)
             super().__enter__()
         except Exception as err:
-            if self.session != None:
+            if self.session is not None:
                 self.session.close()
             raise err
 

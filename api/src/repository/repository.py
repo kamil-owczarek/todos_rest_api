@@ -1,3 +1,7 @@
+"""
+Module contains logic for operations on database. 
+"""
+
 import logging
 from abc import ABC, abstractmethod
 
@@ -8,8 +12,21 @@ from src.utils.exceptions import IdNotFound
 
 
 class AbstractRepository(ABC):
+    """
+    Base object for database operations.
+    """
+
     @abstractmethod
     def get_item(self, item_id: int) -> Item:
+        """Retrieve Item based on provided Id.
+
+        :param item_id: Id of Item in table.
+        :type item_id: int
+
+        :returns: Item object.
+        :rtype: Item
+        """
+
         raise NotImplementedError
 
     @abstractmethod
@@ -20,22 +37,73 @@ class AbstractRepository(ABC):
         filter_field: str | None,
         filter_value: str | bool | None,
     ) -> list[Item]:
+        """Retrieve Items based on provided parameters.
+
+        :param limit: Limit page items size.
+        :type limit: int
+        :param offset: Page number.
+        :type offset: int
+        :param filter_field: Filtering field name.
+        :type filter_field: str | None
+        :param filter_value: Filter value.
+        :type filter_value: str | bool | None
+
+        :returns: List of Item objects.
+        :rtype: list[Item]
+        """
+
         raise NotImplementedError
 
     @abstractmethod
     def insert_item(self, item: ItemBaseSchema) -> bool:
+        """Insert Item based on provided schema.
+
+        :param item: Body of Item to insert.
+        :type item: ItemBaseSchema
+
+        :returns: Operation result.
+        :rtype: bool
+        """
+
         raise NotImplementedError
 
     @abstractmethod
     def update_item(self, item_id: int, item: ItemBaseSchema) -> bool:
+        """Update Item based on provided Id and schema.
+
+        :param item_id: Id of Item in table to update.
+        :type item_id: int
+        :param item: Body of Item to update.
+        :type item: ItemBaseSchema
+
+        :returns: Operation result.
+        :rtype: bool
+        """
+
         raise NotImplementedError
 
     @abstractmethod
     def delete_item(self, item_id: int) -> bool:
+        """Delete Item based on provided Id.
+
+        :param item_id: Id of Item in table to update.
+        :type item_id: int
+
+        :returns: Operation result.
+        :rtype: bool
+        """
+
         raise NotImplementedError
 
 
-class PostgresRepository(AbstractRepository):
+class PostgreSqlRepository(AbstractRepository):
+    """
+    Object for PostgreSQL database operations.
+
+    :param client_session: Connection session to PostgreSQL database.
+    :type client_session: Session
+    """
+
     def __init__(self, client_session: Session):
         self.session = client_session
 
@@ -111,10 +179,9 @@ class PostgresRepository(AbstractRepository):
     def __check_if_item_exists(self, item_id: int) -> bool:
         try:
             result = self.session.query(Item).filter(Item.id == item_id).count()
-            if result > 0:
-                return True
-            else:
+            if result != 1:
                 raise IdNotFound
+            return True
         except IdNotFound as err:
             raise err
         except Exception as err:

@@ -4,7 +4,7 @@ from src.azure import key_vault
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema
 from src.repository.repository import AbstractRepository
-from src.service.session import PostgresSession
+from src.service.session import PostgreSqlSession
 from src.service.unit_of_work import AbstractUnitOfWork
 
 
@@ -50,7 +50,7 @@ def mock_postgres_connection(monkeypatch, session_fixture):
     def mock_connection(*args, **kwargs):
         return session_fixture
 
-    monkeypatch.setattr(PostgresSession, "create_session", mock_connection)
+    monkeypatch.setattr(PostgreSqlSession, "create_session", mock_connection)
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ def mock_postgres_error_connection(monkeypatch, error_session_fixture):
     def mock_connection(*args, **kwargs):
         return error_session_fixture
 
-    monkeypatch.setattr(PostgresSession, "create_session", mock_connection)
+    monkeypatch.setattr(PostgreSqlSession, "create_session", mock_connection)
 
 
 @pytest.fixture
@@ -71,6 +71,14 @@ def auth_header():
 @pytest.fixture
 def fake_key_vault_client(monkeypatch):
     monkeypatch.setattr(key_vault, "SecretClient", FakeSecretClient)
+
+
+@pytest.fixture
+def fake_token(monkeypatch):
+    def create_fake_token(*args, **kwargs):
+        return {"access_token": "fake.token.generated"}
+
+    monkeypatch.setattr("src.auth.token_handler.token_response", create_fake_token)
 
 
 class FakeItemBaseSchema:
