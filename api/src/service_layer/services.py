@@ -4,7 +4,7 @@ Module contains service layer implementation.
 
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema
-from src.service.unit_of_work import AbstractUnitOfWork
+from src.service_layer.unit_of_work import AbstractUnitOfWork
 
 
 def get_item(item_id: int, uow: AbstractUnitOfWork) -> Item:

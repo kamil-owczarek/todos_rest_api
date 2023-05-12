@@ -1,5 +1,5 @@
-from src.service import services
 from src.domain.schema import ItemSchema
+from src.service_layer import services
 
 
 def test_get_item(fake_uow):

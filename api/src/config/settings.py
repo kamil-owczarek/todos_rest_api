@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     db_host: str
     db_port: int
     db_name: str
+    db_table_name: str = "items"
 
 
 def prepare_settings() -> Settings:

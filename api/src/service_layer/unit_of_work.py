@@ -5,8 +5,8 @@ Module contains Unit Of Work logic.
 import logging
 from abc import ABC
 
-from src.repository.repository import AbstractRepository, PostgreSqlRepository
-from src.service.session import PostgreSqlSession
+from src.adapters.repository import AbstractRepository, PostgreSqlRepository
+from src.adapters.session import PostgreSqlSession
 
 
 class AbstractUnitOfWork(ABC):

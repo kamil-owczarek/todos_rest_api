@@ -2,9 +2,9 @@
 Module stores ORM models.
 """
 
-
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import declarative_base
+from src.config.settings import settings
 
 Base = declarative_base()
 
@@ -23,7 +23,7 @@ class Item(Base):
     :type completed: Column
     """
 
-    __tablename__ = "items"
+    __tablename__ = settings.db_table_name
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)

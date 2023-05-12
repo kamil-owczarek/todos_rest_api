@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from src.auth.token import JWTToken
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema, ItemSchema
-from src.service import services
-from src.service.unit_of_work import PostgreSqlUnitOfWork
+from src.service_layer import services
+from src.service_layer.unit_of_work import PostgreSqlUnitOfWork
 from src.utils.exceptions import IdNotFound
 
 router = APIRouter(

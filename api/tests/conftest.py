@@ -1,11 +1,11 @@
 import pytest
+from src.adapters.repository import AbstractRepository
+from src.adapters.session import PostgreSqlSession
 from src.auth.token_handler import create_token
 from src.azure import key_vault
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema
-from src.repository.repository import AbstractRepository
-from src.service.session import PostgreSqlSession
-from src.service.unit_of_work import AbstractUnitOfWork
+from src.service_layer.unit_of_work import AbstractUnitOfWork
 
 
 @pytest.fixture
