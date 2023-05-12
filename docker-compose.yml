@@ -9,15 +9,22 @@ services:
     ports:
       - 8081:8081
     environment:
+    # Choose credential_type and remove unnecessary variables
+    ## Local
+      - credential_type=local
       - jwt_secret=
+      - jwt_algorithm=
+      - jwt_token_expiration=
       - db_user=
       - db_password=
-      - db_host=
+      - db_host=db
       - db_port=
       - db_name=
+    ## KeyVault
       - credential_type=cloud
+      - db_host=db
       - key_vault_url=
-      - azure_secrets=["jwt-secret", "db-user", "db-password", "db-host", "db-port", "db-name"]
+      - azure_secrets=["jwt-secret", "db-user", "db-password", "db-port", "db-name"]
       - AZURE_CLIENT_ID=
       - AZURE_TENANT_ID=
       - AZURE_CLIENT_SECRET=
@@ -32,9 +39,10 @@ services:
     expose:
       - 127.0.0.1:5432
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=test1234
-      - POSTGRES_DB=postgres
+    # If deploying PostgreSQL then fill up variables
+      - POSTGRES_USER=
+      - POSTGRES_PASSWORD=
+      - POSTGRES_DB=
 
 volumes:
   postgres_data:

@@ -96,12 +96,12 @@ There are two options to read API configuration:
 - local environmental variables
 - Azure Key Vault
 
-Both options required specific steps.
+Both options require specific steps.
 
 ### Local environmental variables
-To run API with local environmental variables there is need to fill up and create the below environmental variables:
+To run API with local environmental variables there is a need to fill up and create the below environmental variables:
 ```
-export credential_type=local    # Determines wether it is local or cloud credential type 
+export credential_type=local    # Determines whether it is a local or a cloud credential type 
 export db_user=
 export db_password=
 export db_host=
@@ -117,7 +117,7 @@ export jwt_token_expiration=    # If not provided, default value is "600"
 > Prerequisites: Create Azure cloud account and [Azure Key Vault service](https://learn.microsoft.com/en-us/azure/key-vault/general/quick-create-portal).
 
 To run API with Azure Key Vault secrets usage, firstly you need to prepare the below secrets:
-> Please keep the naming convention, because secrets are loading into Settings model.
+> Please keep the naming convention, because secrets are loading into the Settings model.
 
 ```
 jwt-secret
@@ -135,7 +135,7 @@ export key_vault_url=
 export azure_secrets='["jwt-secret", "db-user", "db-password", "db-host", "db-port", "db-name"]'
 ```
 
-To access Azure cloud from local environment, the Azure credentials are requried:
+To access the Azure cloud from the local environment, the Azure credentials are required:
 ```
 AZURE_CLIENT_ID
 AZURE_TENANT_ID
@@ -161,13 +161,52 @@ uvicorn src.entrypoints.fastapi_app:app --port 8081
 > Prerequisites: Install [Docker engine](#https://docs.docker.com/engine/install/) and [Docker compose plugin](#https://docs.docker.com/compose/install/).
 
 To run API with Docker follow the below steps:
-1. PostgreSQL database and table preparation is included into [docker-compose.yml](/docker-compose.yml) file. If you want to use your own database, please remove section with PostgreSQL creation from [docker-compose.yml](/docker-compose.yml) file. In case of your own database usage, follow [database and table preparation](#prepare-database-and-table) section.
-2. Decide from where API will read [the configuration](#prepare-api-configuration). The mentioned environment variables should be part of [docker-compose.yml](/docker-compose.yml) file. Under ``environment`` properties there are variables for both configuration. You can remove uneccessary variables after configuration option choose.
+1. PostgreSQL database and table preparation is included in [docker-compose.yml](/docker-compose.yml) file. If you want to use your own database, please remove the part with PostgreSQL creation from [docker-compose.yml](/docker-compose.yml) file. In case of your own database usage, follow [database and table preparation](#prepare-database-and-table) section.
+2. Decide from where API will read [the configuration](#prepare-api-configuration). The mentioned environment variables should be part of [docker-compose.yml](/docker-compose.yml) file. Under ``environment`` properties there are variables for both configurations. You can remove unnecessary variables after configuration option choose. Example ``docker-composey.yml`` configuration:
+```
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  api:
+    build: ./api
+    command: uvicorn src.entrypoints.fastapi_app:app --host 0.0.0.0 --port 8081
+    ports:
+      - 8081:8081
+    environment:
+      - db_host=db
+      - credential_type=cloud
+      - key_vault_url=https://<kv_name>.vault.azure.net/
+      - azure_secrets=["jwt-secret", "db-user", "db-password", "db-port", "db-name"]
+      - AZURE_CLIENT_ID=<azure_client_id>
+      - AZURE_TENANT_ID=<azure_tenant_id>
+      - AZURE_CLIENT_SECRET=<azure_client_secret>
+      - db_table_name=items
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./sql/prepare_data.sql:/docker-entrypoint-initdb.d/prepare_data.sql
+    expose:
+      - 127.0.0.1:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=test1234
+      - POSTGRES_DB=postgres
+
+volumes:
+  postgres_data:
+```
+
 3. If all previous steps are done, prompt the below commands to build and deploy Docker containers:
 ```
 docker-compose up -d --build
 ```
-4. Verify that containers are in running state:
+4. Verify that containers are in a running state:
 ```
 docker ps --filter "status=running"
 ```
@@ -177,13 +216,16 @@ docker ps --filter "status=running"
 ## How to call endpoints
 To communicate with API, the JWT token-based authentication is implemented. The logic ensures that each request to a server is accompanied by a signed token which the server verifies for authenticity.
 
-Using OpenAPI documentation you are able to test the API. Follow below steps:
+Using OpenAPI documentation you are able to test the API. Follow the below steps:
 1. Call documentation endpoint in a browser: ```https://127.0.0.1:8081/docs```.
 2. Execute token endpoint to generate JWT token.
-3. Add token to authorize requests. Token will be automaticlly added to header for every next calls. By default token expires after 60 minutes and there is a need to generate new token.
-4. Call endpoints to communicate with server.
+![token-generation](/docs/token_generation.png)
+3. Add a token to authorize requests. The token will be automatically added to the header for every next call. By default, token expires after 60 minutes and there is a need to generate new a token.
+![auth](/docs/auth.png)
+4. Call endpoints to communicate with the server.
+![singe-get](/docs/single_get.png)
 
-To communicate with API using other tool, like Postman, curl, etc. the steps are similar:
+To communicate with API using other tools, like Postman, curl, etc. the steps are similar:
 1. Call token endpoint ```https://127.0.0.1:8081/token``` to generate JWT token.
 2. Add token to authorization header:
 ```
