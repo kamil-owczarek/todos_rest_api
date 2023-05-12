@@ -1,10 +1,22 @@
+"""
+Module to create and verify JWT token.
+
+This module creates JWT token and verify token.
+"""
+
+import logging
+
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi.security.http import HTTPAuthorizationCredentials
 from src.auth.token_handler import decode_token
+from src.utils.exceptions import TokenDecodingError
 
 
 class JWTToken(HTTPBearer):
+    """
+    JWTToken object authorize HTTP request with JWT token.
+    """
+
     def __init__(self, auto_error: bool = True):
         super(JWTToken, self).__init__(auto_error=auto_error)
 
@@ -25,11 +37,22 @@ class JWTToken(HTTPBearer):
             raise HTTPException(status_code=403, detail="Invalid authorization code.")
 
     def verify_token(self, token: str) -> bool:
+        """Verify JWT token.
+
+        :param token: JWT token.
+        :type token: str
+        :returns: Information that JWT token is valid.
+        :rtype: bool
+        """
+
         is_token_valid = False
         try:
             payload = decode_token(token)
-        except:
+        except TokenDecodingError:
             payload = None
+        except Exception as err:
+            logging.info("Caught exception during token veryfication.")
+            raise err
 
         if payload:
             is_token_valid = True

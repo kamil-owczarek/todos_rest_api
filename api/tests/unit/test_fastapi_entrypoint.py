@@ -273,3 +273,10 @@ def test_endpoint_delete_item_raise_id_not_found_error(
     client = TestClient(app)
     result = client.delete("/items/1", headers=auth_header)
     assert result.status_code == 404
+
+
+def test_get_token(fake_token):
+    client = TestClient(app)
+    result = client.get("/token")
+    assert result.status_code == 200
+    assert result.json()["access_token"] == "fake.token.generated"

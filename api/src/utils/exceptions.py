@@ -1,16 +1,19 @@
+"""
+Module contains implementation of custom exceptions.
+"""
+
+
 class IdNotFound(Exception):
     """Raised when Item id does not exist."""
 
-    pass
-
 
 class KeyVaultConnectionError(Exception):
-    """Key Vault connection error"""
-
-    pass
+    """Raised when Key Vault connection error occurs."""
 
 
 class SecretError(ValueError):
-    """Secret not found !"""
+    """Raised when Key Vault secret does not exist."""
 
-    pass
+
+class TokenDecodingError(Exception):
+    """Raised when JWT token decoding fails."""
