@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from src.config.settings import settings
 
 
 class AbstractSession(ABC):
@@ -11,14 +12,12 @@ class AbstractSession(ABC):
 
 
 class PostgresSession(AbstractSession):
-    def __init__(
-        self, username: str, password: str, host: str, database_name: str, port: int
-    ):
-        self.username = username
-        self.password = password
-        self.host = host
-        self.port = port
-        self.database_name = database_name
+    def __init__(self):
+        self.username = settings.db_user
+        self.password = settings.db_password
+        self.host = settings.db_host
+        self.port = settings.db_port
+        self.database_name = settings.db_name
         self.__engine = self.__create_enginge()
         self.session = None
 

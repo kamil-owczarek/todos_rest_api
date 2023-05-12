@@ -1,5 +1,4 @@
 import logging
-import os
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Response
 from src.auth.token import JWTToken
@@ -22,15 +21,6 @@ app = FastAPI(
 )
 
 
-connection = {
-    "username": os.environ.get("db_user", "postgres"),
-    "password": os.environ.get("db_password", "test1234"),
-    "host": os.environ.get("db_host", "localhost"),
-    "port": int(os.environ.get("db_port", "5432")),
-    "database_name": os.environ.get("db_name", "postgres"),
-}
-
-
 @app.get(
     "/items",
     response_model=list[ItemSchema],
@@ -49,7 +39,7 @@ def get_items(
             offset,
             filter_field,
             filter_value,
-            uow=PostgresUnitOfWork(connection),
+            uow=PostgresUnitOfWork(),
         )
         if not results:
             return Response(status_code=204)
@@ -67,7 +57,7 @@ def get_items(
 )
 def get_item(item_id: int):
     try:
-        return services.get_item(item_id, uow=PostgresUnitOfWork(connection))
+        return services.get_item(item_id, uow=PostgresUnitOfWork())
     except IdNotFound:
         raise HTTPException(
             status_code=404, detail=f"Item with ID: {item_id} not found!"
@@ -84,7 +74,7 @@ def get_item(item_id: int):
 )
 def post_item(item: ItemBaseSchema):
     try:
-        services.insert_item(item, uow=PostgresUnitOfWork(connection))
+        services.insert_item(item, uow=PostgresUnitOfWork())
         return Response(status_code=201)
     except Exception as err:
         logging.error(f"Caught error during inserting Item: {err}")
@@ -98,7 +88,7 @@ def post_item(item: ItemBaseSchema):
 )
 def update_item(item_id: int, item: ItemBaseSchema):
     try:
-        services.update_item(item_id, item, uow=PostgresUnitOfWork(connection))
+        services.update_item(item_id, item, uow=PostgresUnitOfWork())
         return Response(status_code=204)
     except IdNotFound:
         raise HTTPException(
@@ -116,7 +106,7 @@ def update_item(item_id: int, item: ItemBaseSchema):
 )
 def delete_item(item_id: int):
     try:
-        services.delete_item(item_id, uow=PostgresUnitOfWork(connection))
+        services.delete_item(item_id, uow=PostgresUnitOfWork())
         return Response(status_code=204)
     except IdNotFound:
         raise HTTPException(

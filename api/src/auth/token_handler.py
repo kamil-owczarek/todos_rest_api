@@ -1,12 +1,8 @@
 import logging
-import os
 import time
 
 import jwt
-
-JWT_SECRET = os.environ.get("jwt_secret", "test")
-JWT_ALGORITHM = os.environ.get("jwt_algorithm", "HS256")
-JWT_TOKEN_EXPIRATION = int(os.environ.get("jwt_token_expiration", "600"))
+from src.config.settings import settings
 
 
 def token_response(token: str) -> dict[str, str]:
@@ -14,15 +10,17 @@ def token_response(token: str) -> dict[str, str]:
 
 
 def create_token() -> dict[str, str]:
-    payload = {"expires": time.time() + JWT_TOKEN_EXPIRATION}
+    payload = {"expires": time.time() + settings.jwt_token_expiration}
 
-    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
     return token_response(token)
 
 
 def decode_token(token: str) -> dict:
     try:
-        decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        decoded_token = jwt.decode(
+            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
+        )
         return decoded_token if decoded_token["expires"] >= time.time() else None
     except Exception as err:
         logging.error("Caught exception during JWT token decoding.")

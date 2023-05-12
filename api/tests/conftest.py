@@ -1,5 +1,6 @@
 import pytest
 from src.auth.token_handler import create_token
+from src.azure import key_vault
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema
 from src.repository.repository import AbstractRepository
@@ -61,21 +62,15 @@ def mock_postgres_error_connection(monkeypatch, error_session_fixture):
 
 
 @pytest.fixture
-def connection_dict():
-    return {
-        "username": "test",
-        "password": "test",
-        "host": "test",
-        "port": 5432,
-        "database_name": "test",
-    }
-
-
-@pytest.fixture
 def auth_header():
     token = create_token()
     header = {"Authorization": f"Bearer {token['access_token']}"}
     return header
+
+
+@pytest.fixture
+def fake_key_vault_client(monkeypatch):
+    monkeypatch.setattr(key_vault, "SecretClient", FakeSecretClient)
 
 
 class FakeItemBaseSchema:
@@ -178,3 +173,27 @@ class FakeRepository(AbstractRepository):
 class FakeUnitOfWork(AbstractUnitOfWork):
     def __init__(self, records: list[FakeItemBaseSchema]):
         self.repository = FakeRepository(records)
+
+
+class FakeKeyVaultSecret:
+    def __init__(self, value) -> None:
+        self.value = value
+
+
+class FakeSecretClient:
+    def __init__(self, vault_url: str, *args, **kwargs) -> None:
+        self.vault_url = self.__check_url(vault_url)
+        self.secrets = {
+            "fake_secret_1": FakeKeyVaultSecret("fake_value_1"),
+            "fake_secret_2": FakeKeyVaultSecret("fake_value_2"),
+        }
+
+    def get_secret(self, secret_name: str) -> FakeKeyVaultSecret:
+        return self.secrets.get(secret_name)
+
+    @staticmethod
+    def __check_url(vault_url: str) -> str:
+        if vault_url.startswith("https://"):
+            return vault_url
+        else:
+            raise Exception
