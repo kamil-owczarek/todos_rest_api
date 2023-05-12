@@ -23,6 +23,10 @@ router = APIRouter(
     "",
     response_model=list[ItemSchema],
     description="Retrieve todo items based on the provided filters.",
+    responses={
+        204: {"description": "No Content"},
+        403: {"description": "Invalid token"},
+    },
 )
 def get_items(
     limit: int = Query(20, ge=0, description="Limit page items size."),
@@ -65,6 +69,10 @@ def get_items(
     "/{item_id}",
     response_model=ItemSchema,
     description="Retrieve todo item based on the provided ID.",
+    responses={
+        403: {"description": "Invalid token"},
+        404: {"description": "The Item was not found!"},
+    },
 )
 def get_item(item_id: int) -> Item:
     """Retrieve Item based on provided Id.
@@ -90,6 +98,10 @@ def get_item(item_id: int) -> Item:
 @router.post(
     "",
     description="Upload todo item with provided title, description and completed flag.",
+    responses={
+        201: {"description": "Created"},
+        403: {"description": "Invalid token"},
+    },
 )
 def post_item(item: ItemBaseSchema):
     """Insert Item based on provided schema.
@@ -113,6 +125,10 @@ def post_item(item: ItemBaseSchema):
     "/{item_id}",
     description="Update todo item based on ID.",
     dependencies=[Depends(JWTToken())],
+    responses={
+        204: {"description": "Not Content"},
+        403: {"description": "Invalid token"},
+    },
 )
 def patch_item(item_id: int, item: ItemBaseSchema):
     """Update Item based on provided Id and schema.
@@ -141,6 +157,10 @@ def patch_item(item_id: int, item: ItemBaseSchema):
 @router.delete(
     "/{item_id}",
     description="Delete todo item based on provided ID.",
+    responses={
+        204: {"description": "Not Content"},
+        403: {"description": "Invalid token"},
+    },
 )
 def delete_item(item_id: int):
     """Delete Item based on provided Id.

@@ -47,6 +47,5 @@ class PostgreSqlSession(AbstractSession):
             raise Exception
 
     def __create_enginge(self):
-        connection_string = f"postgresql://{self.username}:{self.password}@ \
-            {self.host}:{self.port}/{self.database_name}"
+        connection_string = f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
         return create_engine(connection_string)
