@@ -8,9 +8,13 @@
 - [Base model](#base-model)
 - [Endpoints](#endpoints)
 - [How to execute unit tests](#how-to-execute-unit-tests)
-- [Prepare database](#prepare-database)
+- [Prepare database and table](#prepare-database-and-table)
 - [Prepare API configuration](#prepare-api-configuration)
+  - [Local environmental variables](#local-environmental-variables)
+  - [Azure Key Vault secrets](#azure-key-vault-secrets)
 - [How to run API](#how-to-run-api)
+  - [Local console](#local-console)
+  - [With Docker usage](#with-docker-usage)
 - [How to call endpoints](#how-to-call-endpoints)
 
 
@@ -220,7 +224,7 @@ Using OpenAPI documentation you are able to test the API. Follow the below steps
 1. Call documentation endpoint in a browser: ```https://127.0.0.1:8081/docs```.
 2. Execute token endpoint to generate JWT token.
 ![token-generation](/docs/token_generation.png)
-3. Add a token to authorize requests. The token will be automatically added to the header for every next call. By default, token expires after 60 minutes and there is a need to generate new a token.
+3. Add a token to authorize requests. The token will be automatically added to the header for every next call. By default, token expires after 60 minutes and there is a need to generate a new token.
 ![auth](/docs/auth.png)
 4. Call endpoints to communicate with the server.
 ![singe-get](/docs/single_get.png)
