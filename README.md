@@ -19,7 +19,7 @@
 
 
 ## Overview
-The repository is built out of API implementation to manage todos items. The API used the REST API architecture pattern. The source code is written in Python with the usage FastAPI framework.
+The repository is built out of API implementation to manage todos items. The API used the REST API architecture pattern. The source code is written in Python with the FastAPI framework usage.
 
 ## Folder structure
 ```bash
