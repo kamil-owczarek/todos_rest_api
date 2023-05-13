@@ -1,6 +1,6 @@
 import pytest
 from src.domain.model import Item
-from src.service.unit_of_work import PostgreSqlUnitOfWork
+from src.service_layer.unit_of_work import PostgreSqlUnitOfWork
 
 
 def test_unit_of_work_return_get_item(

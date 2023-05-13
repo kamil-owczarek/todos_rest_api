@@ -1,7 +1,7 @@
 import pytest
+from src.adapters.repository import PostgreSqlRepository
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema
-from src.repository.repository import PostgreSqlRepository
 from src.utils.exceptions import IdNotFound
 
 
