@@ -3,8 +3,10 @@ Module contains FastAPI configuration.
 """
 
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from src.auth.token import JWTToken
 from src.entrypoints.routers import items, token
+from src.utils.exception_handlers import exception_handlers
 
 app = FastAPI(
     title="Todo Items REST API",
@@ -18,5 +20,8 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
+
+exception_handlers(app)
+
 app.include_router(token.router)
-app.include_router(items.router)
+app.include_router(items.router, dependencies=[Depends(JWTToken())])

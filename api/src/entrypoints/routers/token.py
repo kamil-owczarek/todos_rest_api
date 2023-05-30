@@ -2,9 +2,8 @@
 Module contains FastAPI token routes.
 """
 
-import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from src.auth.token_handler import create_token
 
 router = APIRouter(prefix="/token", tags=["token"])
@@ -18,8 +17,4 @@ def get_token():
     :rtype: dict
     """
 
-    try:
-        return create_token()
-    except Exception as err:
-        logging.error(f"Caught error during Item deletion: {err}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    return create_token()

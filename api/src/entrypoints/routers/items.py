@@ -2,21 +2,23 @@
 Module contains FastAPI items routes.
 """
 
-import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from src.auth.token import JWTToken
+from fastapi import APIRouter, Depends, Query, Response
+from src.adapters.session import PostgreSqlSession
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema, ItemSchema
 from src.service_layer import services
 from src.service_layer.unit_of_work import PostgreSqlUnitOfWork
-from src.utils.exceptions import IdNotFound
 
-router = APIRouter(
-    tags=["items"],
-    prefix="/items",
-    dependencies=[Depends(JWTToken())],
-)
+router = APIRouter(tags=["items"], prefix="/items")
+
+
+def uow():
+    try:
+        session = PostgreSqlSession()
+        return PostgreSqlUnitOfWork(session)
+    except Exception as err:
+        raise err
 
 
 @router.get(
@@ -33,6 +35,7 @@ def get_items(
     offset: int = Query(0, ge=0, description="Page number."),
     filter_field: str | None = Query(None, description="Filtering field name."),
     filter_value: str | bool | None = Query(None, description="Filter value."),
+    uow=Depends(uow),
 ) -> list[Item]:
     """Retrieve Items based on provided parameters.
 
@@ -49,20 +52,13 @@ def get_items(
     :rtype: list[Item]
     """
 
-    try:
-        results = services.get_items(
-            limit,
-            offset,
-            filter_field,
-            filter_value,
-            uow=PostgreSqlUnitOfWork(),
-        )
-        if not results:
-            return Response(status_code=204)
-        return results
-    except Exception as err:
-        logging.error(f"Caught error during getting Items: {err}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    return services.get_items(
+        limit,
+        offset,
+        filter_field,
+        filter_value,
+        uow=uow,
+    )
 
 
 @router.get(
@@ -71,10 +67,10 @@ def get_items(
     description="Retrieve todo item based on the provided ID.",
     responses={
         403: {"description": "Invalid token"},
-        404: {"description": "The Item was not found!"},
+        404: {"description": "ID not found!"},
     },
 )
-def get_item(item_id: int) -> Item:
+def get_item(item_id: int, uow=Depends(uow)) -> Item:
     """Retrieve Item based on provided Id.
 
     :param item_id: Id of Item in table.
@@ -84,15 +80,7 @@ def get_item(item_id: int) -> Item:
     :rtype: Item
     """
 
-    try:
-        return services.get_item(item_id, uow=PostgreSqlUnitOfWork())
-    except IdNotFound:
-        raise HTTPException(
-            status_code=404, detail=f"Item with ID: {item_id} not found!"
-        )
-    except Exception as err:
-        logging.error(f"Caught error during getting Item: {err}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    return services.get_item(item_id, uow=uow)
 
 
 @router.post(
@@ -103,7 +91,7 @@ def get_item(item_id: int) -> Item:
         403: {"description": "Invalid token"},
     },
 )
-def post_item(item: ItemBaseSchema):
+def post_item(item: ItemBaseSchema, uow=Depends(uow)):
     """Insert Item based on provided schema.
 
     :param item: Body of Item to insert.
@@ -113,24 +101,19 @@ def post_item(item: ItemBaseSchema):
     :rtype: Response
     """
 
-    try:
-        services.insert_item(item, uow=PostgreSqlUnitOfWork())
-        return Response(status_code=201)
-    except Exception as err:
-        logging.error(f"Caught error during inserting Item: {err}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    services.insert_item(item, uow=uow)
+    return Response(status_code=201)
 
 
 @router.patch(
     "/{item_id}",
     description="Update todo item based on ID.",
-    dependencies=[Depends(JWTToken())],
     responses={
         204: {"description": "Not Content"},
         403: {"description": "Invalid token"},
     },
 )
-def patch_item(item_id: int, item: ItemBaseSchema):
+def patch_item(item_id: int, item: ItemBaseSchema, uow=Depends(uow)):
     """Update Item based on provided Id and schema.
 
     :param item_id: Id of Item in table to update.
@@ -142,16 +125,8 @@ def patch_item(item_id: int, item: ItemBaseSchema):
     :rtype: Response
     """
 
-    try:
-        services.update_item(item_id, item, uow=PostgreSqlUnitOfWork())
-        return Response(status_code=204)
-    except IdNotFound:
-        raise HTTPException(
-            status_code=404, detail=f"Item with ID: {item_id} not found!"
-        )
-    except Exception as err:
-        logging.error(f"Caught error during updating Item: {err}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    services.update_item(item_id, item, uow=uow)
+    return Response(status_code=204)
 
 
 @router.delete(
@@ -162,7 +137,7 @@ def patch_item(item_id: int, item: ItemBaseSchema):
         403: {"description": "Invalid token"},
     },
 )
-def delete_item(item_id: int):
+def delete_item(item_id: int, uow=Depends(uow)):
     """Delete Item based on provided Id.
 
     :param item_id: Id of Item in table to update.
@@ -172,13 +147,5 @@ def delete_item(item_id: int):
     :rtype: Response
     """
 
-    try:
-        services.delete_item(item_id, uow=PostgreSqlUnitOfWork())
-        return Response(status_code=204)
-    except IdNotFound:
-        raise HTTPException(
-            status_code=404, detail=f"Item with ID: {item_id} not found!"
-        )
-    except Exception as err:
-        logging.error(f"Caught error during Item deletion: {err}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    services.delete_item(item_id, uow=uow)
+    return Response(status_code=204)
