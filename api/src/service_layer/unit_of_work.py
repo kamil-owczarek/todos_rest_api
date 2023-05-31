@@ -6,7 +6,6 @@ import logging
 from abc import ABC
 
 from src.adapters.repository import AbstractRepository, PostgreSqlRepository
-from src.adapters.session import PostgreSqlSession
 
 
 class AbstractUnitOfWork(ABC):
@@ -24,8 +23,8 @@ class AbstractUnitOfWork(ABC):
 class PostgreSqlUnitOfWork(AbstractUnitOfWork):
     """Unit Of Work logic for PostgreSQL database."""
 
-    def __init__(self):
-        self.session = PostgreSqlSession()
+    def __init__(self, session):
+        self.session = session
 
     def __enter__(self):
         try:

@@ -17,3 +17,15 @@ class SecretError(ValueError):
 
 class TokenDecodingError(Exception):
     """Raised when JWT token decoding fails."""
+
+
+class TokenAuthenticationSchemaError(Exception):
+    """Raised when JWT token schema authentication fails."""
+
+
+class InvalidTokenError(Exception):
+    """Raised when JWT token is invalid or expired."""
+
+
+class TokenAuthenticationCodeError(Exception):
+    """Raised when JWT token code authentication fails."""

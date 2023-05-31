@@ -33,7 +33,7 @@ class PostgreSqlSession(AbstractSession):
         self.password = settings.db_password
         self.host = settings.db_host
         self.port = settings.db_port
-        self.database_name = settings.db_name
+        self.db_name = settings.db_name
         self.__engine = self.__create_enginge()
         self.session = None
 
@@ -43,9 +43,10 @@ class PostgreSqlSession(AbstractSession):
                 autocommit=False, autoflush=False, bind=self.__engine
             )
             return self.session()
-        except Exception:
-            raise Exception
+        except Exception as err:
+            raise err
 
     def __create_enginge(self):
-        connection_string = f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database_name}"
-        return create_engine(connection_string)
+        return create_engine(
+            f"postgresql://{self.username}:{self.password}@{self.host}:{self.port}/{self.db_name}"
+        )

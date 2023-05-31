@@ -2,9 +2,11 @@
 Module contains service layer implementation.
 """
 
+from fastapi import Response
 from src.domain.model import Item
 from src.domain.schema import ItemBaseSchema
 from src.service_layer.unit_of_work import AbstractUnitOfWork
+from src.utils.exceptions import IdNotFound
 
 
 def get_item(item_id: int, uow: AbstractUnitOfWork) -> Item:
@@ -20,7 +22,10 @@ def get_item(item_id: int, uow: AbstractUnitOfWork) -> Item:
     """
 
     with uow:
-        return uow.repository.get_item(item_id)
+        result = uow.repository.get_item(item_id)
+        if not result:
+            raise IdNotFound
+        return result
 
 
 def get_items(
@@ -48,7 +53,8 @@ def get_items(
     """
 
     with uow:
-        return uow.repository.get_items(limit, offset, filter_field, filter_value)
+        results = uow.repository.get_items(limit, offset, filter_field, filter_value)
+        return Response(status_code=204) if not results else results
 
 
 def insert_item(item: ItemBaseSchema, uow: AbstractUnitOfWork) -> bool:
