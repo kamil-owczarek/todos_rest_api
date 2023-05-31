@@ -32,7 +32,7 @@ def internal_server_error_handler(request: Request, exc: Exception):
 def id_not_found_error_handler(request: Request, exc: IdNotFound):
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        content=f"ID not found!",
+        content="ID not found!",
     )
 
 

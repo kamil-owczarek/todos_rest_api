@@ -23,10 +23,9 @@ def get_item(item_id: int, uow: AbstractUnitOfWork) -> Item:
 
     with uow:
         result = uow.repository.get_item(item_id)
-        if result:
-            return result
-        else:
+        if not result:
             raise IdNotFound
+        return result
 
 
 def get_items(

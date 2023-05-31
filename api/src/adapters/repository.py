@@ -120,9 +120,23 @@ class PostgreSqlRepository(AbstractRepository):
         filter_field: str | None,
         filter_value: str | bool | None,
     ) -> list[Item]:
+        def __prepare_query_filters(
+            query: Query,
+            filter_field: str | None,
+            filter_value: str | bool | None,
+        ) -> Query:
+            match filter_field:
+                case "title":
+                    query = query.filter(Item.title.contains(filter_value))
+                case "description":
+                    query = query.filter(Item.description.contains(filter_value))
+                case "completed":
+                    query = query.filter(Item.completed == filter_value)
+            return query
+
         try:
             query = self.session.query(Item)
-            query = self.__prepare_query_filters(query, filter_field, filter_value)
+            query = __prepare_query_filters(query, filter_field, filter_value)
             return query.offset(offset).limit(limit).all()
         except Exception as err:
             logging.error(f"Caught error during getting Items: {err}")
@@ -162,15 +176,3 @@ class PostgreSqlRepository(AbstractRepository):
         except Exception as err:
             logging.error(f"Caught error during Item(Id: {item_id}) deletion: {err}")
             raise err
-
-    def __prepare_query_filters(
-        self, query: Query, filter_field: str | None, filter_value: str | bool | None
-    ) -> Query:
-        match filter_field:
-            case "title":
-                query = query.filter(Item.title.contains(filter_value))
-            case "description":
-                query = query.filter(Item.description.contains(filter_value))
-            case "completed":
-                query = query.filter(Item.completed == filter_value)
-        return query

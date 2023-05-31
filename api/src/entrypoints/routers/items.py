@@ -14,6 +14,9 @@ router = APIRouter(tags=["items"], prefix="/items")
 
 
 def uow():
+    """
+    Unit of work dependency.
+    """
     try:
         session = PostgreSqlSession()
         return PostgreSqlUnitOfWork(session)
@@ -35,7 +38,7 @@ def get_items(
     offset: int = Query(0, ge=0, description="Page number."),
     filter_field: str | None = Query(None, description="Filtering field name."),
     filter_value: str | bool | None = Query(None, description="Filter value."),
-    uow=Depends(uow),
+    uow_session=Depends(uow),
 ) -> list[Item]:
     """Retrieve Items based on provided parameters.
 
@@ -57,7 +60,7 @@ def get_items(
         offset,
         filter_field,
         filter_value,
-        uow=uow,
+        uow=uow_session,
     )
 
 
@@ -70,7 +73,7 @@ def get_items(
         404: {"description": "ID not found!"},
     },
 )
-def get_item(item_id: int, uow=Depends(uow)) -> Item:
+def get_item(item_id: int, uow_session=Depends(uow)) -> Item:
     """Retrieve Item based on provided Id.
 
     :param item_id: Id of Item in table.
@@ -80,7 +83,7 @@ def get_item(item_id: int, uow=Depends(uow)) -> Item:
     :rtype: Item
     """
 
-    return services.get_item(item_id, uow=uow)
+    return services.get_item(item_id, uow=uow_session)
 
 
 @router.post(
@@ -91,7 +94,7 @@ def get_item(item_id: int, uow=Depends(uow)) -> Item:
         403: {"description": "Invalid token"},
     },
 )
-def post_item(item: ItemBaseSchema, uow=Depends(uow)):
+def post_item(item: ItemBaseSchema, uow_session=Depends(uow)):
     """Insert Item based on provided schema.
 
     :param item: Body of Item to insert.
@@ -101,7 +104,7 @@ def post_item(item: ItemBaseSchema, uow=Depends(uow)):
     :rtype: Response
     """
 
-    services.insert_item(item, uow=uow)
+    services.insert_item(item, uow=uow_session)
     return Response(status_code=201)
 
 
@@ -113,7 +116,7 @@ def post_item(item: ItemBaseSchema, uow=Depends(uow)):
         403: {"description": "Invalid token"},
     },
 )
-def patch_item(item_id: int, item: ItemBaseSchema, uow=Depends(uow)):
+def patch_item(item_id: int, item: ItemBaseSchema, uow_session=Depends(uow)):
     """Update Item based on provided Id and schema.
 
     :param item_id: Id of Item in table to update.
@@ -125,7 +128,7 @@ def patch_item(item_id: int, item: ItemBaseSchema, uow=Depends(uow)):
     :rtype: Response
     """
 
-    services.update_item(item_id, item, uow=uow)
+    services.update_item(item_id, item, uow=uow_session)
     return Response(status_code=204)
 
 
@@ -137,7 +140,7 @@ def patch_item(item_id: int, item: ItemBaseSchema, uow=Depends(uow)):
         403: {"description": "Invalid token"},
     },
 )
-def delete_item(item_id: int, uow=Depends(uow)):
+def delete_item(item_id: int, uow_session=Depends(uow)):
     """Delete Item based on provided Id.
 
     :param item_id: Id of Item in table to update.
@@ -147,5 +150,5 @@ def delete_item(item_id: int, uow=Depends(uow)):
     :rtype: Response
     """
 
-    services.delete_item(item_id, uow=uow)
+    services.delete_item(item_id, uow=uow_session)
     return Response(status_code=204)

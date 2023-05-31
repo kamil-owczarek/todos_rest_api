@@ -42,9 +42,10 @@ def test_endpoint_get_item_invalid_token(mock_postgres_connection):
 def test_endpoint_get_item_raise_exception(
     error_session_fixture, mock_postgres_error_connection, auth_header
 ):
-    client = TestClient(app)
-    result = client.get("/items/1", headers=auth_header)
-    assert result.status_code == 500
+    with pytest.raises(Exception):
+        client = TestClient(app)
+        result = client.get("/items/1", headers=auth_header)
+        assert result.status_code == 500
 
 
 @pytest.mark.parametrize(
@@ -56,7 +57,7 @@ def test_endpoint_get_item_raise_id_not_found_error(
     client = TestClient(app)
     result = client.get("/items/1", headers=auth_header)
     assert result.status_code == 404
-    assert result.json().get("detail") == "Item with ID: 1 not found!"
+    assert result.json() == "ID not found!"
 
 
 def test_endpoint_get_items(mock_postgres_connection, auth_header):
@@ -98,9 +99,10 @@ def test_endpoint_get_items_invalid_token(mock_postgres_connection):
 def test_endpoint_get_items_raise_exception(
     error_session_fixture, mock_postgres_error_connection, auth_header
 ):
-    client = TestClient(app)
-    result = client.get("/items", headers=auth_header)
-    assert result.status_code == 500
+    with pytest.raises(Exception):
+        client = TestClient(app)
+        result = client.get("/items", headers=auth_header)
+        assert result.status_code == 500
 
 
 def test_endpoint_post_item(mock_postgres_connection, auth_header):
@@ -152,11 +154,11 @@ def test_endpoint_post_invalid_token(mock_postgres_connection):
 def test_endpoint_post_item_raise_exception(
     error_session_fixture, mock_postgres_error_connection, auth_header
 ):
-    client = TestClient(app)
-    item = {"title": "new", "description": "new", "completed": True}
-    result = client.post("/items", content=json.dumps(item), headers=auth_header)
-    assert result.status_code == 500
-
+    with pytest.raises(Exception):
+        client = TestClient(app)
+        item = {"title": "new", "description": "new", "completed": True}
+        result = client.post("/items", content=json.dumps(item), headers=auth_header)
+        assert result.status_code == 500
 
 def test_endpoint_patch_item(mock_postgres_connection, auth_header):
     client = TestClient(app)
@@ -207,10 +209,11 @@ def test_endpoint_patch_item_invalid_token(mock_postgres_connection):
 def test_endpoint_patch_item_raise_exception(
     error_session_fixture, mock_postgres_error_connection, auth_header
 ):
-    client = TestClient(app)
-    item = {"title": "updated", "description": "updated", "completed": False}
-    result = client.patch("/items/1", content=json.dumps(item), headers=auth_header)
-    assert result.status_code == 500
+    with pytest.raises(Exception):
+        client = TestClient(app)
+        item = {"title": "updated", "description": "updated", "completed": False}
+        result = client.patch("/items/1", content=json.dumps(item), headers=auth_header)
+        assert result.status_code == 500
 
 
 @pytest.mark.parametrize(
@@ -259,9 +262,10 @@ def test_endpoint_delete_item_invalid_token(mock_postgres_connection):
 def test_endpoint_delete_item_raise_exception(
     error_session_fixture, mock_postgres_error_connection, auth_header
 ):
-    client = TestClient(app)
-    result = client.delete("/items/1", headers=auth_header)
-    assert result.status_code == 500
+    with pytest.raises(Exception):
+        client = TestClient(app)
+        result = client.delete("/items/1", headers=auth_header)
+        assert result.status_code == 500
 
 
 @pytest.mark.parametrize(

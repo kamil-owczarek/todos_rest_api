@@ -8,9 +8,13 @@ import logging
 
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from src.utils.exceptions import TokenAuthenticationSchemaError, InvalidTokenError, TokenAuthenticationCodeError
 from src.auth.token_handler import decode_token
-from src.utils.exceptions import TokenDecodingError
+from src.utils.exceptions import (
+    InvalidTokenError,
+    TokenAuthenticationCodeError,
+    TokenAuthenticationSchemaError,
+    TokenDecodingError,
+)
 
 
 class JWTToken(HTTPBearer):
