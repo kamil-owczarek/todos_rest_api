@@ -4,14 +4,13 @@ Module to create base API configuration.
 This module creates Settings object with API configuration
 """
 
-import json
 import os
 
 from pydantic import BaseSettings
 from src.azure.key_vault import AzureVault
 
 
-class Settings(BaseSettings):
+class LocalSettings(BaseSettings):
     """
     Settings object creates API configuration based on environment variables.
 
@@ -44,7 +43,26 @@ class Settings(BaseSettings):
     db_table_name: str = "items"
 
 
-def prepare_settings() -> Settings:
+class AzureSettings(LocalSettings):
+    class Config:
+        def retrieve_azure_secrets(settings: BaseSettings):
+            key_vault = AzureVault(os.environ.get("key_vault_url"))
+            return {
+                field: key_vault.get_secret(field.replace("_", "-"))
+                for field in AzureSettings.__fields__
+            }
+
+        @classmethod
+        def customise_sources(cls, init_settings, env_settings, file_secret_settings):
+            return (
+                init_settings,
+                env_settings,
+                file_secret_settings,
+                cls.retrieve_azure_secrets,
+            )
+
+
+def prepare_settings() -> BaseSettings:
     """
     Prepare Settings object based on credential type.
     Credentials can be read from Azure Key Vault or environmental varables
@@ -54,16 +72,9 @@ def prepare_settings() -> Settings:
     """
 
     credential_type = os.environ.get("credential_type")
-    if credential_type == "cloud":
-        key_vault = AzureVault(os.environ.get("key_vault_url"))
-        secrets = json.loads(os.environ.get("azure_secrets"))
-        return Settings(
-            **{
-                secret.replace("-", "_"): key_vault.get_secret(secret)
-                for secret in secrets
-            }
-        )
-    return Settings()
+    if credential_type == "azure":
+        return AzureSettings()
+    return LocalSettings()
 
 
 settings = prepare_settings()
